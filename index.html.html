@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CESFAM JPII — Gestión Nutricional</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --carolina: #0077c8;
+      --carolina-light: #e8f4fd;
+      --carolina-mid: #bde0f8;
+      --constanza: #eab308;
+      --constanza-light: #fefce8;
+      --constanza-mid: #fde047;
+      --gabriela: #dc2626;
+      --gabriela-light: #fee2e2;
+      --gabriela-mid: #fca5a5;
+      --blue-primary: #0077c8;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --gray-900: #0f172a;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; color: var(--gray-900); margin: 0; }
+    main { overflow-y: auto; }
+
+    /* ── NAVBAR ── */
+    .text-blue-primary { color: var(--blue-primary); }
+    .bg-blue-primary { background-color: var(--blue-primary); }
+    .nav-link { font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-600); transition: color 0.2s; cursor: pointer; background: none; border: none; padding: 6px 0; }
+    .nav-link:hover, .nav-link.active { color: var(--blue-primary); }
+
+    /* ── DROPDOWN ── */
+    .dropdown { position: relative; }
+    .dropdown-menu { position: absolute; top: calc(100% + 8px); left: 0; min-width: 220px; background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-md); box-shadow: var(--shadow-md); opacity: 0; visibility: hidden; transition: all 0.15s; z-index: 100; padding: 6px; }
+    .dropdown-menu.open { opacity: 1; visibility: visible; }
+    .dropdown-item { display: block; width: 100%; text-align: left; padding: 9px 14px; font-size: 0.84rem; font-weight: 600; color: var(--gray-600); background: none; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s; }
+    .dropdown-item:hover { background: var(--gray-50); color: var(--blue-primary); }
+
+    /* ── SECTIONS ── */
+    .section { display: none; }
+    .section.active { display: block; }
+    .sub-section { display: none; }
+    .sub-section.active { display: block; }
+    main > section:not(#section-home) { padding-top: 1.5rem !important; }
+
+    /* ── CARDS ── */
+    .card-base { background: white; border-radius: var(--radius-xl); border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); padding: 28px; margin-bottom: 16px; }
+    .kpi-card { border-radius: var(--radius-lg); background: white; border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm); padding: 20px; }
+
+    /* ── SECTOR HEADERS ── */
+    .header-carolina { border-left: 5px solid var(--carolina); padding-left: 16px; }
+    .header-constanza { border-left: 5px solid var(--constanza); padding-left: 16px; }
+    .header-gabriela { border-left: 5px solid var(--gabriela); padding-left: 16px; }
+
+    /* ── KPI ACCENT BORDERS ── */
+    .kpi-carolina { border-left: 4px solid var(--carolina) !important; }
+    .kpi-constanza { border-left: 4px solid var(--constanza) !important; }
+    .kpi-gabriela { border-left: 4px solid var(--gabriela) !important; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 0.03em; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-amber { background: var(--constanza-light); color: #713f12; }
+    .badge-blue { background: var(--carolina-light); color: #1e40af; }
+    .badge-dark { background: var(--gray-900); color: white; }
+    .badge-carolina { background: var(--carolina-light); color: var(--carolina); }
+    .badge-constanza { background: var(--constanza-light); color: var(--constanza); }
+    .badge-gabriela { background: var(--gabriela-light); color: var(--gabriela); }
+
+    /* ── TOTAL BADGE (top right) ── */
+    .total-badge { color: white; padding: 14px 28px; border-radius: 18px; text-align: center; }
+    .total-badge-carolina { background: linear-gradient(135deg, var(--carolina), #005fa3); }
+    .total-badge-constanza { background: linear-gradient(135deg, #eab308, #ca8a04); }
+    .total-badge-gabriela { background: linear-gradient(135deg, var(--gabriela), #b91c1c); }
+    .total-badge-dark { background: linear-gradient(135deg, #1e293b, #0f172a); }
+
+    /* ── TABS ── */
+    .tab-btn { padding: 8px 20px; border-radius: 20px; border: 2px solid transparent; font-size: 0.8rem; font-weight: 600; cursor: pointer; background: white; color: var(--gray-600); transition: all 0.2s; border-color: var(--gray-200); }
+    .tab-btn:hover { border-color: var(--gray-400); }
+    .tab-btn.active-carolina { background: var(--carolina); color: white; border-color: var(--carolina); }
+    .tab-btn.active-constanza { background: var(--constanza); color: white; border-color: var(--constanza); }
+    .tab-btn.active-gabriela { background: var(--gabriela); color: white; border-color: var(--gabriela); }
+    .tab-btn.active { background: var(--blue-primary); color: white; border-color: var(--blue-primary); }
+
+    /* ── EJE CARDS ── */
+    .eje-card { border-radius: var(--radius-lg); padding: 22px; border: 1px solid var(--gray-200); background: white; box-shadow: var(--shadow-sm); transition: box-shadow 0.2s; }
+    .eje-card:hover { box-shadow: var(--shadow-md); }
+    .eje-card.corto { border-left: 4px solid #16a34a; border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
+    .eje-card.mediano { border-left: 4px solid var(--constanza); border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
+
+    /* ── ROW ITEMS ── */
+    .row-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--gray-50); margin-bottom: 8px; border: 1px solid var(--gray-100); }
+    .row-item:hover { background: var(--gray-100); }
+    .pill { font-size: 12px; font-weight: 700; padding: 4px 14px; border-radius: 20px; border: 1.5px solid var(--gray-200); background: white; color: var(--gray-600); }
+
+    /* ── BACK BUTTON ── */
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 600; color: var(--gray-600); background: white; border: 1.5px solid var(--gray-200); border-radius: 20px; padding: 8px 18px; cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem; }
+    .back-btn:hover { background: var(--gray-50); color: var(--gray-900); border-color: var(--gray-400); }
+
+    /* ── ACCORDIONS ── */
+    .accordion-wrap { border: 1.5px solid var(--gray-200); border-radius: var(--radius-xl); margin-bottom: 12px; overflow: hidden; background: white; box-shadow: var(--shadow-sm); transition: box-shadow 0.2s; }
+    .accordion-wrap:hover { box-shadow: var(--shadow-md); }
+    .accordion-wrap.red-accent { border-left: 4px solid var(--gabriela); border-radius: 0 var(--radius-xl) var(--radius-xl) 0; }
+    .accordion-wrap.green-accent { border-left: 4px solid #16a34a; border-radius: 0 var(--radius-xl) var(--radius-xl) 0; }
+    .accordion-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 20px 28px; background: none; border: none; cursor: pointer; text-align: left; transition: background 0.15s; }
+    .accordion-btn:hover { background: var(--gray-50); }
+    .accordion-btn .acc-title { font-size: 1rem; font-weight: 700; color: var(--gray-900); }
+    .accordion-btn .acc-num { font-size: 1.6rem; font-weight: 800; }
+    .accordion-btn .acc-meta { font-size: 0.73rem; color: var(--gray-400); margin-top: 3px; }
+    .accordion-btn .acc-arrow { font-size: 0.75rem; color: var(--gray-400); transition: transform 0.3s; flex-shrink: 0; margin-left: 12px; }
+    .accordion-btn.open .acc-arrow { transform: rotate(180deg); }
+    .accordion-body { display: none; padding: 0 28px 24px; }
+    .accordion-body.open { display: block; }
+    .inner-accordion-btn { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 13px 18px; background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-md); cursor: pointer; text-align: left; font-size: 0.84rem; font-weight: 600; color: var(--gray-600); margin-top: 12px; transition: background 0.15s; }
+    .inner-accordion-btn:hover { background: var(--gray-100); }
+    .inner-accordion-btn .acc-arrow { font-size: 0.7rem; color: var(--gray-400); transition: transform 0.3s; }
+    .inner-accordion-btn.open .acc-arrow { transform: rotate(180deg); }
+    .inner-accordion-body { display: none; padding: 12px 4px 4px; }
+    .inner-accordion-body.open { display: block; }
+
+    /* ── TABLES ── */
+    .table-row:hover { background-color: var(--gray-50); }
+    canvas { max-width: 100% !important; }
+
+    /* ── GANTT ── */
+    .gantt-bar { height: 18px; border-radius: 4px; }
+
+    /* ── SECTION DIVIDER ── */
+    .section-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 16px; }
+    .section-label-green { background: #dcfce7; color: #166534; }
+    .section-label-amber { background: var(--constanza-light); color: #92400e; }
+    .section-label-blue { background: var(--carolina-light); color: #1e40af; }
+  </style>
+</head>
+<body>
+
+<!-- NAVEGACIÓN -->
+<header class="fixed top-0 w-full z-50" style="background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); border-bottom: 1.5px solid #e2e8f0; box-shadow: 0 1px 8px rgba(0,0,0,0.06);">
+  <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="data:image/png;base64,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" alt="Logo CESFAM Juan Pablo II" style="height:48px;width:auto;object-fit:contain;">
+      <div>
+        <h1 class="font-bold text-lg leading-none">CESFAM <span class="text-blue-primary">JPII</span></h1>
+        <p class="text-[10px] uppercase tracking-tighter text-gray-400 font-semibold">Gestión Nutricional</p>
+      </div>
+    </div>
+    <nav class="hidden md:flex items-center gap-6">
+      <button onclick="showSection('home')" class="nav-link active" id="nav-home">Inicio</button>
+
+      <div class="dropdown" id="dropdown-nutri">
+        <button class="nav-link flex items-center gap-1" onclick="toggleDropdown('dropdown-nutri')">Nutricionistas <i class="fas fa-chevron-down text-[10px] ml-1"></i></button>
+        <div class="dropdown-menu" id="menu-nutri">
+          <button onclick="showSection('comparacion');closeDropdowns()" class="dropdown-item" style="color:#0077c8;border-bottom:1px solid #f0f0f0;margin-bottom:4px;">Comparación global</button>
+          <button onclick="showSection('carolina');closeDropdowns()" class="dropdown-item">Carolina Ceballos</button>
+          <button onclick="showSection('constanza');closeDropdowns()" class="dropdown-item">Constanza Pardo</button>
+          <button onclick="showSection('gabriela');closeDropdowns()" class="dropdown-item">Gabriela Mundaca</button>
+        </div>
+      </div>
+
+      <button onclick="showSection('encuesta')" class="nav-link" id="nav-encuesta">Tu hora importa</button>
+
+      <div class="dropdown" id="dropdown-plan">
+        <button class="nav-link flex items-center gap-1" onclick="toggleDropdown('dropdown-plan')">Plan de mejora <i class="fas fa-chevron-down text-[10px] ml-1"></i></button>
+        <div class="dropdown-menu" id="menu-plan">
+          <button onclick="showSection('plan-corto');closeDropdowns()" class="dropdown-item">Corto plazo</button>
+          <button onclick="showSection('plan-mediano');closeDropdowns()" class="dropdown-item">Mediano plazo</button>
+          <button onclick="showSection('plan-completo');closeDropdowns()" class="dropdown-item">Plan completo</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="pt-20 max-w-6xl mx-auto px-6" style="background:#f8fafc; min-height:100vh;">
+
+  <!-- ==================== HOME ==================== -->
+  <section id="section-home" class="section active flex flex-col items-center justify-center text-center" style="padding: 80px 0; transition: all 0.3s;">
+    <h2 id="home-title" class="font-extrabold text-gray-900 tracking-tight mb-2" style="font-size:4.5rem; transition: all 0.3s;">Bienvenido <span style="color:#0077c8;">CESFAM Juan Pablo II</span></h2>
+    <p id="home-sub" class="font-semibold text-gray-500" style="font-size:1.4rem; transition: all 0.3s; margin-bottom:1rem;">Inasistencia a controles nutricionales</p>
+    <p id="home-desc" class="text-gray-400 italic" style="font-size:0; opacity:0;"></p>
+  </section>
+
+  <!-- ==================== COMPARACIÓN GLOBAL ==================== -->
+  <section id="section-comparacion" class="section py-16">
+    <button class="back-btn" onclick="showSection('home')"><i class="fas fa-arrow-left text-xs"></i> Volver al inicio</button>
+    <div class="flex justify-between items-end mb-12 flex-wrap gap-4">
+      <div>
+        <p class="text-xs uppercase font-bold text-blue-primary tracking-widest mb-1">Nutricionistas · Marzo 2026</p>
+        <h2 class="text-5xl font-extrabold text-gray-900 tracking-tight">Comparación global</h2>
+        <p class="text-gray-400 mt-2">Inasistencias de las 3 nutricionistas durante marzo 2026</p>
+      </div>
+      <div class="bg-gray-900 text-white px-8 py-4 rounded-3xl text-center">
+        <p class="text-[10px] uppercase font-bold opacity-60">Total inasistentes</p>
+        <p class="text-3xl font-black">79</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div class="bg-gray-50 rounded-3xl p-8 text-center cursor-pointer hover:shadow-md transition" onclick="showSection('carolina')">
+        <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-blue-primary font-bold text-lg">CC</span></div>
+        <h4 class="font-bold text-lg">Carolina Ceballos</h4>
+        <p class="text-gray-400 text-sm mb-3">Sector Azul</p>
+        <p class="text-3xl font-extrabold text-blue-primary">16</p>
+        <p class="text-xs text-gray-400 mt-1">inasistencias · marzo</p>
+        <div class="mt-3 flex justify-center gap-4 text-xs">
+          <span class="text-green-600 font-semibold">13 contactados</span>
+          <span class="text-red-400 font-semibold">3 no contactados</span>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Tasa contacto: 81%</p>
+      </div>
+      <div class="bg-gray-50 rounded-3xl p-8 text-center cursor-pointer hover:shadow-md transition" onclick="showSection('constanza')">
+        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-green-700 font-bold text-lg">CP</span></div>
+        <h4 class="font-bold text-lg">Constanza Pardo</h4>
+        <p class="text-gray-400 text-sm mb-3">Nutricionista</p>
+        <p class="text-3xl font-extrabold text-green-700">31</p>
+        <p class="text-xs text-gray-400 mt-1">inasistencias · marzo</p>
+        <div class="mt-3 flex justify-center gap-4 text-xs">
+          <span class="text-green-600 font-semibold">20 contactados</span>
+          <span class="text-red-400 font-semibold">11 no contactados</span>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Tasa contacto: 65%</p>
+      </div>
+      <div class="bg-gray-50 rounded-3xl p-8 text-center cursor-pointer hover:shadow-md transition" onclick="showSection('gabriela')">
+        <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-purple-700 font-bold text-lg">GM</span></div>
+        <h4 class="font-bold text-lg">Gabriela Mundaca</h4>
+        <p class="text-gray-400 text-sm mb-3">Nutricionista</p>
+        <p class="text-3xl font-extrabold text-purple-700">32</p>
+        <p class="text-xs text-gray-400 mt-1">inasistencias · marzo</p>
+        <div class="mt-3 flex justify-center gap-4 text-xs">
+          <span class="text-green-600 font-semibold">18 contactados</span>
+          <span class="text-red-400 font-semibold">14 no contactados</span>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Tasa contacto: 56%</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div class="kpi-card p-8 border-l-4 border-blue-400">
+        <p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Total inasistentes</p>
+        <h4 class="text-4xl font-extrabold text-blue-primary">79</h4>
+        <p class="text-sm text-gray-500 mt-2">Suma de las 3 nutricionistas.</p>
+      </div>
+      <div class="kpi-card p-8 border-l-4 border-green-500">
+        <p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Total contactados</p>
+        <h4 class="text-4xl font-extrabold text-green-600">51</h4>
+        <p class="text-sm text-gray-500 mt-2">13 + 20 + 18 · Tasa global: 65%</p>
+      </div>
+      <div class="kpi-card p-8 border-l-4 border-red-400">
+        <p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Total no contactados</p>
+        <h4 class="text-4xl font-extrabold text-red-500">28</h4>
+        <p class="text-sm text-gray-500 mt-2">3 + 11 + 14 · Datos erróneos o sin respuesta.</p>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-[32px] p-10 shadow-sm mb-8">
+      <h4 class="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest">Comparativa de inasistencias por tipo de atención — Marzo</h4>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left">
+          <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+            <th class="py-3 font-bold">Tipo de atención</th>
+            <th class="py-3 text-center font-bold" style="color:#0077c8">Carolina</th>
+            <th class="py-3 text-center font-bold text-green-700">Constanza</th>
+            <th class="py-3 text-center font-bold text-purple-700">Gabriela</th>
+            <th class="py-3 text-center font-bold bg-gray-50">Total</th>
+          </tr></thead>
+          <tbody>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Clínica lactancia materna alerta</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center">4</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center font-bold bg-gray-50">4</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Clínica lactancia materna seguimiento</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center">2</td><td class="py-3 text-center">1</td><td class="py-3 text-center font-bold bg-gray-50">3</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Consejería lactancia materna</td><td class="py-3 text-center">1</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center font-bold bg-gray-50">1</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control niño sano 3 años y 6 meses</td><td class="py-3 text-center">2</td><td class="py-3 text-center">2</td><td class="py-3 text-center">2</td><td class="py-3 text-center font-bold bg-gray-50">6</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control nutricional</td><td class="py-3 text-center">9</td><td class="py-3 text-center">9</td><td class="py-3 text-center">12</td><td class="py-3 text-center font-bold bg-gray-50">30</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control nutricional cardiovascular</td><td class="py-3 text-center">3</td><td class="py-3 text-center">12</td><td class="py-3 text-center">17</td><td class="py-3 text-center font-bold bg-gray-50">32</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Examen de medicina preventiva (EMP)</td><td class="py-3 text-center">1</td><td class="py-3 text-center">2</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center font-bold bg-gray-50">3</td></tr>
+            <tr class="bg-blue-50"><td class="py-3 font-bold text-blue-primary pl-2">Total</td><td class="py-3 text-center font-bold text-blue-primary">16</td><td class="py-3 text-center font-bold text-blue-primary">31</td><td class="py-3 text-center font-bold text-blue-primary">32</td><td class="py-3 text-center font-black text-blue-primary bg-blue-100">79</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-100 rounded-[32px] p-10 shadow-sm">
+      <h4 class="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest">Tasa de contacto comparativa</h4>
+      <div class="space-y-5">
+        <div>
+          <div class="flex justify-between text-sm mb-2"><span class="font-semibold">Carolina Ceballos</span><span class="text-gray-500">13 de 16 · <strong class="text-green-600">81%</strong></span></div>
+          <div class="w-full bg-gray-100 rounded-full h-3"><div class="bg-blue-primary h-3 rounded-full" style="width:81%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm mb-2"><span class="font-semibold">Constanza Pardo</span><span class="text-gray-500">20 de 31 · <strong class="text-yellow-600">65%</strong></span></div>
+          <div class="w-full bg-gray-100 rounded-full h-3"><div class="bg-green-600 h-3 rounded-full" style="width:65%"></div></div>
+        </div>
+        <div>
+          <div class="flex justify-between text-sm mb-2"><span class="font-semibold">Gabriela Mundaca</span><span class="text-gray-500">18 de 32 · <strong class="text-red-500">56%</strong></span></div>
+          <div class="w-full bg-gray-100 rounded-full h-3"><div class="bg-purple-600 h-3 rounded-full" style="width:56%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RANKING INASISTENCIAS -->
+    <div class="bg-white border border-gray-100 rounded-[32px] p-10 shadow-sm mt-8">
+      <h4 class="text-sm font-bold mb-2 text-gray-400 uppercase tracking-widest">Ranking de inasistencias — Marzo 2026</h4>
+      <p class="text-xs text-gray-400 mb-6">Ordenado de mayor a menor total de inasistencias</p>
+      <div class="space-y-6">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center text-xs font-black text-red-500">1°</div>
+            <span class="font-bold text-gray-900">Gabriela Mundaca</span>
+            <span class="text-xs text-gray-400 ml-auto">32 inasistencias</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-4">
+            <div class="h-4 rounded-full bg-purple-500" style="width:100%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-400 mt-1">
+            <span>14 no contactados · 18 contactados</span>
+            <span>Tasa contacto: <strong class="text-red-500">56%</strong></span>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-7 h-7 rounded-full bg-yellow-100 flex items-center justify-center text-xs font-black text-yellow-600">2°</div>
+            <span class="font-bold text-gray-900">Constanza Pardo</span>
+            <span class="text-xs text-gray-400 ml-auto">31 inasistencias</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-4">
+            <div class="h-4 rounded-full bg-green-500" style="width:97%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-400 mt-1">
+            <span>11 no contactados · 20 contactados</span>
+            <span>Tasa contacto: <strong class="text-yellow-600">65%</strong></span>
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center text-xs font-black text-green-600">3°</div>
+            <span class="font-bold text-gray-900">Carolina Ceballos</span>
+            <span class="text-xs text-gray-400 ml-auto">16 inasistencias</span>
+          </div>
+          <div class="w-full bg-gray-100 rounded-full h-4">
+            <div class="h-4 rounded-full bg-blue-primary" style="width:50%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-400 mt-1">
+            <span>3 no contactados · 13 contactados</span>
+            <span>Tasa contacto: <strong class="text-green-600">81%</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIPO DE ATENCIÓN CON MÁS INASISTENCIAS -->
+    <div class="bg-white border border-gray-100 rounded-[32px] p-10 shadow-sm mt-8">
+      <h4 class="text-sm font-bold mb-2 text-gray-400 uppercase tracking-widest">Tipo de atención con más inasistencias — Marzo 2026</h4>
+      <p class="text-xs text-gray-400 mb-6">Ordenado por total entre las 3 nutricionistas</p>
+
+      <div class="space-y-5">
+        <!-- Cardiovascular -->
+        <div class="bg-red-50 rounded-2xl p-5">
+          <div class="flex justify-between items-center mb-3">
+            <div>
+              <span class="text-xs font-black text-red-500 uppercase tracking-widest">1° lugar</span>
+              <h5 class="font-bold text-gray-900 mt-1">Control nutricional cardiovascular</h5>
+            </div>
+            <div class="text-right">
+              <p class="text-3xl font-black text-red-500">32</p>
+              <p class="text-xs text-gray-400">total inasistencias</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-center text-xs">
+            <div class="bg-white rounded-xl p-3">
+              <p class="text-gray-400 mb-1">Carolina</p>
+              <p class="text-lg font-extrabold" style="color:#0077c8">3</p>
+            </div>
+            <div class="bg-white rounded-xl p-3">
+              <p class="text-gray-400 mb-1">Constanza</p>
+              <p class="text-lg font-extrabold text-green-700">12</p>
+            </div>
+            <div class="bg-white rounded-xl p-3">
+              <p class="text-gray-400 mb-1">Gabriela</p>
+              <p class="text-lg font-extrabold text-purple-700">17</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Control nutricional -->
+        <div class="bg-orange-50 rounded-2xl p-5">
+          <div class="flex justify-between items-center mb-3">
+            <div>
+              <span class="text-xs font-black text-orange-500 uppercase tracking-widest">2° lugar</span>
+              <h5 class="font-bold text-gray-900 mt-1">Control nutricional</h5>
+            </div>
+            <div class="text-right">
+              <p class="text-3xl font-black text-orange-500">30</p>
+              <p class="text-xs text-gray-400">total inasistencias</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-center text-xs">
+            <div class="bg-white rounded-xl p-3">
+              <p class="text-gray-400 mb-1">Carolina</p>
+              <p class="text-lg font-extrabold" style="color:#0077c8">9</p>
+            </div>
+            <div class="bg-white rounded-xl p-3">
+              <p class="text-gray-400 mb-1">Constanza</p>
+              <p class="text-lg font-extrabold text-green-700">9</p>
+            </div>
+            <div class="bg-white rounded-xl p-3">
+              <p class="text-gray-400 mb-1">Gabriela</p>
+              <p class="text-lg font-extrabold text-purple-700">12</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clínica lactancia alerta -->
+        <div class="bg-yellow-50 rounded-2xl p-5">
+          <div class="flex justify-between items-center mb-3">
+            <div>
+              <span class="text-xs font-black text-yellow-600 uppercase tracking-widest">3° lugar</span>
+              <h5 class="font-bold text-gray-900 mt-1">Clínica lactancia materna alerta</h5>
+            </div>
+            <div class="text-right">
+              <p class="text-3xl font-black text-yellow-600">4</p>
+              <p class="text-xs text-gray-400">total inasistencias</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-3 text-center text-xs">
+            <div class="bg-white rounded-xl p-3">
+              <p class="text-gray-400 mb-1">Carolina</p>
+              <p class="text-lg font-extrabold text-gray-300">0</p>
+            </div>
+            <div class="bg-white rounded-xl p-3">
+              <p class="text-gray-400 mb-1">Constanza</p>
+              <p class="text-lg font-extrabold text-green-700">4</p>
+            </div>
+            <div class="bg-white rounded-xl p-3">
+              <p class="text-gray-400 mb-1">Gabriela</p>
+              <p class="text-lg font-extrabold text-gray-300">0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resto más pequeños -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-gray-50 rounded-2xl p-5">
+            <div class="flex justify-between items-center mb-3">
+              <h5 class="font-bold text-gray-700 text-sm">Control niño sano 3a 6m</h5>
+              <span class="text-xl font-black text-gray-700">6</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Carolina</p><p class="font-bold" style="color:#0077c8">2</p></div>
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Constanza</p><p class="font-bold text-green-700">2</p></div>
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Gabriela</p><p class="font-bold text-purple-700">2</p></div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-2xl p-5">
+            <div class="flex justify-between items-center mb-3">
+              <h5 class="font-bold text-gray-700 text-sm">Clínica lactancia materna seguimiento</h5>
+              <span class="text-xl font-black text-gray-700">3</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Carolina</p><p class="font-bold text-gray-300">0</p></div>
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Constanza</p><p class="font-bold text-green-700">2</p></div>
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Gabriela</p><p class="font-bold text-purple-700">1</p></div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-2xl p-5">
+            <div class="flex justify-between items-center mb-3">
+              <h5 class="font-bold text-gray-700 text-sm">Examen de medicina preventiva (EMP)</h5>
+              <span class="text-xl font-black text-gray-700">3</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Carolina</p><p class="font-bold" style="color:#0077c8">1</p></div>
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Constanza</p><p class="font-bold text-green-700">2</p></div>
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Gabriela</p><p class="font-bold text-gray-300">0</p></div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-2xl p-5">
+            <div class="flex justify-between items-center mb-3">
+              <h5 class="font-bold text-gray-700 text-sm">Consejería lactancia materna</h5>
+              <span class="text-xl font-black text-gray-700">1</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Carolina</p><p class="font-bold" style="color:#0077c8">1</p></div>
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Constanza</p><p class="font-bold text-gray-300">0</p></div>
+              <div class="bg-white rounded-xl p-2"><p class="text-gray-400">Gabriela</p><p class="font-bold text-gray-300">0</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS COMPARACIÓN GLOBAL -->
+    <div class="accordion-wrap mt-8" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this); initChartsComparacion()">
+        <div><div class="acc-title" style="color:#0077c8;">Ver gráficos</div><div class="acc-meta">Visualizaciones de inasistencias y tipo de atención</div></div>
+        <i class="fas fa-chart-bar acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Total inasistencias por nutricionista</p>
+            <canvas id="chart-comp-ranking" height="200"></canvas>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Tasa de contacto (%)</p>
+            <canvas id="chart-comp-contacto" height="200"></canvas>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Inasistencias por tipo de atención — comparativa</p>
+          <canvas id="chart-comp-tipo" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CAROLINA ==================== -->
+  <section id="section-carolina" class="section py-16">
+    <button class="back-btn" onclick="showSection('home')"><i class="fas fa-arrow-left text-xs"></i> Volver al inicio</button>
+    <div class="flex justify-between items-end mb-8 flex-wrap gap-4">
+      <div class="header-carolina">
+        <p class="text-xs uppercase font-bold tracking-widest mb-1" style="color:var(--carolina)">Nutricionista · Sector Azul · Marzo 2026</p>
+        <h2 class="text-5xl font-extrabold text-gray-900 tracking-tight">Carolina Ceballos</h2>
+      </div>
+      <div class="total-badge total-badge-carolina">
+        <p class="text-[10px] uppercase font-bold opacity-80">Total inasistencias</p>
+        <p class="text-3xl font-black">16</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
+      <div class="kpi-card"><p class="text-xs uppercase font-bold mb-2 tracking-widest" style="color:var(--gray-400)">Inasistentes</p><h4 class="text-4xl font-extrabold" style="color:var(--carolina)">16</h4></div>
+      <div class="kpi-card kpi-carolina"><p class="text-xs uppercase font-bold mb-2 tracking-widest" style="color:var(--gray-400)">Contactados</p><h4 class="text-4xl font-extrabold text-green-600">13</h4></div>
+      <div class="kpi-card" style="border-left:4px solid var(--gabriela)"><p class="text-xs uppercase font-bold mb-2 tracking-widest" style="color:var(--gray-400)">No contactados</p><h4 class="text-4xl font-extrabold" style="color:var(--gabriela)">3</h4></div>
+      <div class="kpi-card"><p class="text-xs uppercase font-bold mb-2 tracking-widest" style="color:var(--gray-400)">Tasa contacto</p><h4 class="text-4xl font-extrabold text-gray-700">81%</h4></div>
+    </div>
+
+    <!-- ACORDEÓN NO CONTACTADOS -->
+    <div class="accordion-wrap red-accent mb-4">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-num text-red-500">3</div><div class="acc-title">No contactados</div><div class="acc-meta">Clic para ver motivos y tipo de atención</div></div>
+        <i class="fas fa-chevron-down acc-arrow"></i>
+      </button>
+      <div class="accordion-body">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Motivo de no contacto</p>
+        <div class="grid grid-cols-2 gap-3 mb-6">
+          <div class="row-item"><span>Suena desocupado</span><span class="pill text-red-500">1</span></div>
+          <div class="row-item"><span>Celular apagado</span><span class="pill text-red-500">2</span></div>
+        </div>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Tipo de atención de no contactados</p>
+        <table class="w-full text-sm text-left">
+          <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+            <th class="py-2 font-bold">Tipo de atención</th><th class="py-2 text-center font-bold">No contactados</th>
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-50"><td class="py-2">Control nutricional</td><td class="py-2 text-center text-red-400 font-semibold">2</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Control nutricional cardiovascular</td><td class="py-2 text-center text-red-400 font-semibold">1</td></tr>
+            <tr class="bg-red-50"><td class="py-2 font-bold text-red-500 pl-2">Total</td><td class="py-2 text-center font-bold text-red-500">3</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ACORDEÓN CONTACTADOS -->
+    <div class="accordion-wrap green-accent">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-num text-green-600">13</div><div class="acc-title">Contactados</div><div class="acc-meta">Clic para ver motivos, cancelación y tipo de atención</div></div>
+        <i class="fas fa-chevron-down acc-arrow"></i>
+      </button>
+      <div class="accordion-body">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Motivos de inasistencia</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          <div class="row-item"><span>Problemas de salud</span><span class="pill">3</span></div>
+          <div class="row-item"><span>No sabía que estaba citada</span><span class="pill">3</span></div>
+          <div class="row-item"><span>Olvido de hora</span><span class="pill">2</span></div>
+          <div class="row-item"><span>Asuntos personales</span><span class="pill">2</span></div>
+          <div class="row-item"><span>Trabajo</span><span class="pill">2</span></div>
+          <div class="row-item"><span class="text-gray-400">Reagendada</span><span class="pill text-gray-300">0</span></div>
+          <div class="row-item"><span class="text-gray-400">Viaje</span><span class="pill text-gray-300">0</span></div>
+        </div>
+
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Tipo de atención de contactados</p>
+        <table class="w-full text-sm text-left mb-4">
+          <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+            <th class="py-2 font-bold">Tipo de atención</th><th class="py-2 text-center font-bold">Contactados</th>
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-50"><td class="py-2">Consejería lactancia materna</td><td class="py-2 text-center text-green-600 font-semibold">1</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Control niño sano 3 años y 6 meses</td><td class="py-2 text-center text-green-600 font-semibold">2</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Control nutricional</td><td class="py-2 text-center text-green-600 font-semibold">7</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Control nutricional cardiovascular</td><td class="py-2 text-center text-green-600 font-semibold">2</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Examen de medicina preventiva (EMP)</td><td class="py-2 text-center text-green-600 font-semibold">1</td></tr>
+            <tr class="bg-green-50"><td class="py-2 font-bold text-green-700 pl-2">Total</td><td class="py-2 text-center font-bold text-green-700">13</td></tr>
+          </tbody>
+        </table>
+
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Cancelación de hora</p>
+        <div class="flex gap-8 justify-center mb-4 bg-gray-50 rounded-2xl py-5">
+          <div class="text-center"><p class="text-4xl font-black text-green-500">2</p><p class="text-[10px] font-bold text-gray-400 mt-1">SÍ PUDO</p></div>
+          <div class="h-12 w-[1px] bg-gray-200 self-center"></div>
+          <div class="text-center"><p class="text-4xl font-black text-red-400">10</p><p class="text-[10px] font-bold text-gray-400 mt-1">NO PUDO</p></div>
+        </div>
+
+        <!-- INNER ACORDEÓN NO CANCELARON -->
+        <button class="inner-accordion-btn" onclick="toggleInnerAcc(this)">
+          <span>Ver motivos de no cancelación (10)</span>
+          <i class="fas fa-chevron-down acc-arrow"></i>
+        </button>
+        <div class="inner-accordion-body">
+          <div class="row-item"><span>Olvido de hora</span><span class="pill">5</span></div>
+          <div class="row-item"><span>No sabía que estaba citada</span><span class="pill">3</span></div>
+          <div class="row-item"><span>Problemas con la app</span><span class="pill">2</span></div>
+          <div class="row-item"><span class="text-gray-400">No sabía cómo hacerlo</span><span class="pill text-gray-300">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS CAROLINA -->
+    <div class="accordion-wrap mt-6" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this); initChartsCarolina()">
+        <div><div class="acc-title" style="color:#0077c8;">Ver gráficos</div><div class="acc-meta">Dona de contactabilidad, barras por tipo de atención y motivos</div></div>
+        <i class="fas fa-chart-bar acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Contactabilidad</p>
+            <canvas id="chart-car-dona" height="220"></canvas>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Motivos de inasistencia</p>
+            <canvas id="chart-car-motivos" height="220"></canvas>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Inasistencias por tipo de atención</p>
+          <canvas id="chart-car-tipo" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== CONSTANZA ==================== -->
+  <section id="section-constanza" class="section py-16">
+    <button class="back-btn" onclick="showSection('home')"><i class="fas fa-arrow-left text-xs"></i> Volver al inicio</button>
+    <div class="flex justify-between items-end mb-8 flex-wrap gap-4">
+      <div class="header-constanza">
+        <p class="text-xs uppercase font-bold tracking-widest mb-1" style="color:var(--constanza)">Nutricionista · Sector Amarillo · Marzo 2026</p>
+        <h2 class="text-5xl font-extrabold text-gray-900 tracking-tight">Constanza Pardo</h2>
+      </div>
+      <div class="total-badge total-badge-constanza">
+        <p class="text-[10px] uppercase font-bold opacity-80">Total inasistencias</p>
+        <p class="text-3xl font-black">31</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
+      <div class="kpi-card"><p class="text-xs uppercase font-bold mb-2 tracking-widest" style="color:var(--gray-400)">Inasistentes</p><h4 class="text-4xl font-extrabold" style="color:var(--constanza)">31</h4></div>
+      <div class="kpi-card kpi-constanza"><p class="text-xs uppercase font-bold mb-2 tracking-widest" style="color:var(--gray-400)">Contactados</p><h4 class="text-4xl font-extrabold text-green-600">20</h4></div>
+      <div class="kpi-card" style="border-left:4px solid var(--gabriela)"><p class="text-xs uppercase font-bold mb-2 tracking-widest" style="color:var(--gray-400)">No contactados</p><h4 class="text-4xl font-extrabold" style="color:var(--gabriela)">11</h4></div>
+      <div class="kpi-card"><p class="text-xs uppercase font-bold mb-2 tracking-widest" style="color:var(--gray-400)">Tasa contacto</p><h4 class="text-4xl font-extrabold text-gray-700">65%</h4></div>
+    </div>
+
+    <!-- ACORDEÓN NO CONTACTADOS -->
+    <div class="accordion-wrap red-accent mb-4">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-num text-red-500">11</div><div class="acc-title">No contactados</div><div class="acc-meta">Clic para ver motivos y tipo de atención</div></div>
+        <i class="fas fa-chevron-down acc-arrow"></i>
+      </button>
+      <div class="accordion-body">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Motivo de no contacto</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div class="row-item"><span>Sin número</span><span class="pill text-red-500">2</span></div>
+          <div class="row-item"><span>Desocupado</span><span class="pill text-red-500">4</span></div>
+          <div class="row-item"><span>Apagado</span><span class="pill text-red-500">4</span></div>
+          <div class="row-item"><span>Nº equivocado</span><span class="pill text-red-500">1</span></div>
+        </div>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Tipo de atención de no contactados</p>
+        <table class="w-full text-sm text-left">
+          <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+            <th class="py-2 font-bold">Tipo de atención</th><th class="py-2 text-center font-bold">No contactados</th>
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-50"><td class="py-2">Clínica lactancia materna alerta</td><td class="py-2 text-center text-red-400 font-semibold">1</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Control niño sano 3 años y 6 meses</td><td class="py-2 text-center text-red-400 font-semibold">1</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Control nutricional</td><td class="py-2 text-center text-red-400 font-semibold">4</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Control nutricional cardiovascular</td><td class="py-2 text-center text-red-400 font-semibold">4</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Examen de medicina preventiva (EMP)</td><td class="py-2 text-center text-red-400 font-semibold">1</td></tr>
+            <tr class="bg-red-50"><td class="py-2 font-bold text-red-500 pl-2">Total</td><td class="py-2 text-center font-bold text-red-500">11</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ACORDEÓN CONTACTADOS -->
+    <div class="accordion-wrap green-accent">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-num text-green-600">20</div><div class="acc-title">Contactados</div><div class="acc-meta">Clic para ver motivos, cancelación y tipo de atención</div></div>
+        <i class="fas fa-chevron-down acc-arrow"></i>
+      </button>
+      <div class="accordion-body">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Motivos de inasistencia</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          <div class="row-item"><span>Asuntos personales</span><span class="pill">9</span></div>
+          <div class="row-item"><span>Viaje</span><span class="pill">3</span></div>
+          <div class="row-item"><span>Problemas de salud</span><span class="pill">2</span></div>
+          <div class="row-item"><span>No sabía que estaba citada</span><span class="pill">2</span></div>
+          <div class="row-item"><span>Trabajo</span><span class="pill">2</span></div>
+          <div class="row-item"><span>Olvido de hora</span><span class="pill">1</span></div>
+          <div class="row-item"><span>Reagendada</span><span class="pill">1</span></div>
+        </div>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Tipo de atención de contactados</p>
+        <table class="w-full text-sm text-left mb-4">
+          <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+            <th class="py-2 font-bold">Tipo de atención</th><th class="py-2 text-center font-bold">Contactados</th>
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-50"><td class="py-2">Clínica lactancia materna alerta</td><td class="py-2 text-center text-green-600 font-semibold">3</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Clínica lactancia materna seguimiento</td><td class="py-2 text-center text-green-600 font-semibold">2</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Control niño sano 3 años y 6 meses</td><td class="py-2 text-center text-green-600 font-semibold">1</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Control nutricional</td><td class="py-2 text-center text-green-600 font-semibold">5</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Control nutricional cardiovascular</td><td class="py-2 text-center text-green-600 font-semibold">8</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Examen de medicina preventiva (EMP)</td><td class="py-2 text-center text-green-600 font-semibold">1</td></tr>
+            <tr class="bg-green-50"><td class="py-2 font-bold text-green-700 pl-2">Total</td><td class="py-2 text-center font-bold text-green-700">20</td></tr>
+          </tbody>
+        </table>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Cancelación de hora</p>
+        <div class="flex gap-8 justify-center mb-4 bg-gray-50 rounded-2xl py-5">
+          <div class="text-center"><p class="text-4xl font-black text-green-500">3</p><p class="text-[10px] font-bold text-gray-400 mt-1">SÍ PUDO</p></div>
+          <div class="h-12 w-[1px] bg-gray-200 self-center"></div>
+          <div class="text-center"><p class="text-4xl font-black text-red-400">17</p><p class="text-[10px] font-bold text-gray-400 mt-1">NO PUDO</p></div>
+        </div>
+        <button class="inner-accordion-btn" onclick="toggleInnerAcc(this)">
+          <span>Ver motivos de no cancelación (17)</span>
+          <i class="fas fa-chevron-down acc-arrow"></i>
+        </button>
+        <div class="inner-accordion-body">
+          <div class="row-item"><span>Olvido de hora</span><span class="pill">10</span></div>
+          <div class="row-item"><span>No sabía que estaba citada</span><span class="pill">5</span></div>
+          <div class="row-item"><span>Problemas con la app</span><span class="pill">1</span></div>
+          <div class="row-item"><span>No sabía cómo hacerlo</span><span class="pill">1</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS CONSTANZA -->
+    <div class="accordion-wrap mt-6" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this); initChartsConstanza()">
+        <div><div class="acc-title" style="color:#0077c8;">Ver gráficos</div><div class="acc-meta">Dona de contactabilidad, barras por tipo de atención y motivos</div></div>
+        <i class="fas fa-chart-bar acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Contactabilidad</p>
+            <canvas id="chart-con-dona" height="220"></canvas>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Motivos de inasistencia</p>
+            <canvas id="chart-con-motivos" height="220"></canvas>
+          </div>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Inasistencias por tipo de atención</p>
+          <canvas id="chart-con-tipo" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== GABRIELA ==================== -->
+  <section id="section-gabriela" class="section py-16">
+    <button class="back-btn" onclick="showSection('home')"><i class="fas fa-arrow-left text-xs"></i> Volver al inicio</button>
+    <div class="flex justify-between items-end mb-8 flex-wrap gap-4">
+      <div class="header-gabriela">
+        <p class="text-xs uppercase font-bold tracking-widest mb-1" style="color:var(--gabriela)">Nutricionista · Extensión · Enero – Marzo 2026</p>
+        <h2 class="text-5xl font-extrabold text-gray-900 tracking-tight">Gabriela Mundaca</h2>
+      </div>
+      <div class="total-badge total-badge-gabriela">
+        <p class="text-[10px] uppercase font-bold opacity-80">Total acumulado</p>
+        <p class="text-3xl font-black">190</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 mb-8">
+      <button class="tab-btn active" onclick="showGabTab('comparativo', this)">Comparativo</button>
+      <button class="tab-btn" onclick="showGabTab('enero', this)">Enero</button>
+      <button class="tab-btn" onclick="showGabTab('febrero', this)">Febrero</button>
+      <button class="tab-btn" onclick="showGabTab('marzo', this)">Marzo</button>
+    </div>
+
+    <!-- Comparativo -->
+    <div id="gab-comparativo" class="sub-section active">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Enero</p><h4 class="text-4xl font-extrabold text-blue-primary">126</h4></div>
+        <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Febrero</p><h4 class="text-4xl font-extrabold text-blue-primary">32</h4></div>
+        <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Marzo</p><h4 class="text-4xl font-extrabold text-blue-primary">32</h4></div>
+        <div class="kpi-card p-8 border-l-4 border-yellow-400"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Total acumulado</p><h4 class="text-4xl font-extrabold text-yellow-600">190</h4></div>
+      </div>
+      <div class="bg-white border border-gray-100 rounded-[32px] p-10 shadow-sm">
+        <h4 class="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest">Inasistencias por tipo de atención — Enero a Marzo</h4>
+        <table class="w-full text-sm text-left">
+          <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+            <th class="py-3 font-bold">Tipo de atención</th>
+            <th class="py-3 text-center font-bold">Enero</th>
+            <th class="py-3 text-center font-bold">Febrero</th>
+            <th class="py-3 text-center font-bold">Marzo</th>
+            <th class="py-3 text-center font-bold bg-gray-50">Total</th>
+          </tr></thead>
+          <tbody>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Clínica lactancia materna alerta</td><td class="py-3 text-center">5</td><td class="py-3 text-center">2</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center font-bold bg-gray-50">7</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Clínica lactancia materna seguimiento</td><td class="py-3 text-center">9</td><td class="py-3 text-center">1</td><td class="py-3 text-center">1</td><td class="py-3 text-center font-bold bg-gray-50">11</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Consejería lactancia materna</td><td class="py-3 text-center">3</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center font-bold bg-gray-50">3</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control niño sano 3 años y 6 meses</td><td class="py-3 text-center">9</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center">2</td><td class="py-3 text-center font-bold bg-gray-50">11</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control niño sano 5 meses</td><td class="py-3 text-center">3</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center font-bold bg-gray-50">3</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control nutricional</td><td class="py-3 text-center">37</td><td class="py-3 text-center">12</td><td class="py-3 text-center">12</td><td class="py-3 text-center font-bold bg-gray-50">61</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control nutricional cardiovascular</td><td class="py-3 text-center">56</td><td class="py-3 text-center">17</td><td class="py-3 text-center">17</td><td class="py-3 text-center font-bold bg-gray-50">90</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">EMPA</td><td class="py-3 text-center">4</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center text-gray-300">0</td><td class="py-3 text-center font-bold bg-gray-50">4</td></tr>
+            <tr class="bg-blue-50"><td class="py-3 font-bold text-blue-primary pl-2">Total</td><td class="py-3 text-center font-bold text-blue-primary">126</td><td class="py-3 text-center font-bold text-blue-primary">32</td><td class="py-3 text-center font-bold text-blue-primary">32</td><td class="py-3 text-center font-black text-blue-primary bg-blue-100">190</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- GRÁFICOS COMPARATIVO GABRIELA -->
+      <div class="accordion-wrap mt-6" style="border-color:#e0e7ff;">
+        <button class="accordion-btn" onclick="toggleAcc(this); initChartsGabComp()">
+          <div><div class="acc-title" style="color:#0077c8;">Ver gráficos</div><div class="acc-meta">Evolución mensual y comparativa por tipo de atención</div></div>
+          <i class="fas fa-chart-bar acc-arrow" style="color:#0077c8;"></i>
+        </button>
+        <div class="accordion-body">
+          <div class="mb-6">
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Evolución de inasistencias por mes</p>
+            <canvas id="chart-gabcomp-meses" height="100"></canvas>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Inasistencias por tipo de atención — los 3 meses</p>
+            <canvas id="chart-gabcomp-tipo" height="120"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enero -->
+    <div id="gab-enero" class="sub-section">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Total inasistencias</p><h4 class="text-4xl font-extrabold text-blue-primary">126</h4></div>
+        <div class="kpi-card p-8 border-l-4 border-red-400"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Mayor prestación</p><h4 class="text-4xl font-extrabold text-red-500">56</h4><p class="text-xs text-gray-400 mt-1">Control nutricional cardiovascular</p></div>
+        <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Control nutricional</p><h4 class="text-4xl font-extrabold text-gray-700">37</h4><p class="text-xs text-gray-400 mt-1">Segunda prestación</p></div>
+      </div>
+      <div class="bg-white border border-gray-100 rounded-[32px] p-10 shadow-sm">
+        <h4 class="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest">Desglose — Enero 2026</h4>
+        <table class="w-full text-sm text-left">
+          <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100"><th class="py-3 font-bold">Tipo de atención</th><th class="py-3 text-center font-bold bg-gray-50">Inasistencias</th></tr></thead>
+          <tbody>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Clínica lactancia materna alerta</td><td class="py-3 text-center font-bold bg-gray-50">5</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Clínica lactancia materna seguimiento</td><td class="py-3 text-center font-bold bg-gray-50">9</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Consejería lactancia materna</td><td class="py-3 text-center font-bold bg-gray-50">3</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control niño sano 3 años y 6 meses</td><td class="py-3 text-center font-bold bg-gray-50">9</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control niño sano 5 meses</td><td class="py-3 text-center font-bold bg-gray-50">3</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control nutricional</td><td class="py-3 text-center font-bold bg-gray-50">37</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control nutricional cardiovascular</td><td class="py-3 text-center font-bold bg-gray-50">56</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">EMPA</td><td class="py-3 text-center font-bold bg-gray-50">4</td></tr>
+            <tr class="bg-blue-50"><td class="py-3 font-bold text-blue-primary pl-2">Total</td><td class="py-3 text-center font-black text-blue-primary bg-blue-100">126</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="accordion-wrap mt-6" style="border-color:#e0e7ff;">
+        <button class="accordion-btn" onclick="toggleAcc(this); initChartsGabEnero()">
+          <div><div class="acc-title" style="color:#0077c8;">Ver gráficos</div><div class="acc-meta">Inasistencias por tipo de atención — Enero 2026</div></div>
+          <i class="fas fa-chart-bar acc-arrow" style="color:#0077c8;"></i>
+        </button>
+        <div class="accordion-body">
+          <canvas id="chart-gab-enero-tipo" height="130"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Febrero -->
+    <div id="gab-febrero" class="sub-section">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Total inasistencias</p><h4 class="text-4xl font-extrabold text-blue-primary">32</h4></div>
+        <div class="kpi-card p-8 border-l-4 border-red-400"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Mayor prestación</p><h4 class="text-4xl font-extrabold text-red-500">17</h4><p class="text-xs text-gray-400 mt-1">Control nutricional cardiovascular</p></div>
+        <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Control nutricional</p><h4 class="text-4xl font-extrabold text-gray-700">12</h4><p class="text-xs text-gray-400 mt-1">Segunda prestación</p></div>
+      </div>
+      <div class="bg-white border border-gray-100 rounded-[32px] p-10 shadow-sm">
+        <h4 class="text-sm font-bold mb-6 text-gray-400 uppercase tracking-widest">Desglose — Febrero 2026</h4>
+        <table class="w-full text-sm text-left">
+          <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100"><th class="py-3 font-bold">Tipo de atención</th><th class="py-3 text-center font-bold bg-gray-50">Inasistencias</th></tr></thead>
+          <tbody>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Clínica lactancia materna alerta</td><td class="py-3 text-center font-bold bg-gray-50">2</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Clínica lactancia materna seguimiento</td><td class="py-3 text-center font-bold bg-gray-50">1</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control nutricional</td><td class="py-3 text-center font-bold bg-gray-50">12</td></tr>
+            <tr class="table-row border-b border-gray-50"><td class="py-3">Control nutricional cardiovascular</td><td class="py-3 text-center font-bold bg-gray-50">17</td></tr>
+            <tr class="bg-blue-50"><td class="py-3 font-bold text-blue-primary pl-2">Total</td><td class="py-3 text-center font-black text-blue-primary bg-blue-100">32</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="accordion-wrap mt-6" style="border-color:#e0e7ff;">
+        <button class="accordion-btn" onclick="toggleAcc(this); initChartsGabFebrero()">
+          <div><div class="acc-title" style="color:#0077c8;">Ver gráficos</div><div class="acc-meta">Inasistencias por tipo de atención — Febrero 2026</div></div>
+          <i class="fas fa-chart-bar acc-arrow" style="color:#0077c8;"></i>
+        </button>
+        <div class="accordion-body">
+          <canvas id="chart-gab-febrero-tipo" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Marzo -->
+    <div id="gab-marzo" class="sub-section">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Inasistentes</p><h4 class="text-4xl font-extrabold text-blue-primary">32</h4></div>
+        <div class="kpi-card p-8 border-l-4 border-green-500"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Contactados</p><h4 class="text-4xl font-extrabold text-green-600">18</h4></div>
+        <div class="kpi-card p-8 border-l-4 border-red-400"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">No contactados</p><h4 class="text-4xl font-extrabold text-red-500">14</h4></div>
+        <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Tasa contacto</p><h4 class="text-4xl font-extrabold text-gray-700">56%</h4></div>
+      </div>
+
+      <!-- ACORDEÓN NO CONTACTADOS -->
+      <div class="accordion-wrap red-accent mb-4">
+        <button class="accordion-btn" onclick="toggleAcc(this)">
+          <div><div class="acc-num text-red-500">14</div><div class="acc-title">No contactados</div><div class="acc-meta">Clic para ver motivos y tipo de atención</div></div>
+          <i class="fas fa-chevron-down acc-arrow"></i>
+        </button>
+        <div class="accordion-body">
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Motivo de no contacto</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div class="row-item"><span>Sin número</span><span class="pill text-red-500">4</span></div>
+            <div class="row-item"><span>Desocupado</span><span class="pill text-red-500">2</span></div>
+            <div class="row-item"><span>Apagado</span><span class="pill text-red-500">7</span></div>
+            <div class="row-item"><span>Nº equivocado</span><span class="pill text-red-500">1</span></div>
+          </div>
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Tipo de atención de no contactados</p>
+          <table class="w-full text-sm text-left">
+            <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+              <th class="py-2 font-bold">Tipo de atención</th><th class="py-2 text-center font-bold">No contactados</th>
+            </tr></thead>
+            <tbody>
+              <tr class="border-b border-gray-50"><td class="py-2">Control niño sano 3 años y 6 meses</td><td class="py-2 text-center text-red-400 font-semibold">1</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2">Control nutricional</td><td class="py-2 text-center text-red-400 font-semibold">6</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2">Control nutricional cardiovascular</td><td class="py-2 text-center text-red-400 font-semibold">7</td></tr>
+              <tr class="bg-red-50"><td class="py-2 font-bold text-red-500 pl-2">Total</td><td class="py-2 text-center font-bold text-red-500">14</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ACORDEÓN CONTACTADOS -->
+      <div class="accordion-wrap green-accent">
+        <button class="accordion-btn" onclick="toggleAcc(this)">
+          <div><div class="acc-num text-green-600">18</div><div class="acc-title">Contactados</div><div class="acc-meta">Clic para ver motivos, cancelación y tipo de atención</div></div>
+          <i class="fas fa-chevron-down acc-arrow"></i>
+        </button>
+        <div class="accordion-body">
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Motivos de inasistencia</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+            <div class="row-item"><span>Olvido de hora</span><span class="pill">5</span></div>
+            <div class="row-item"><span>Asuntos personales</span><span class="pill">4</span></div>
+            <div class="row-item"><span>Problemas de salud</span><span class="pill">3</span></div>
+            <div class="row-item"><span>Trabajo</span><span class="pill">3</span></div>
+            <div class="row-item"><span>Viaje</span><span class="pill">1</span></div>
+            <div class="row-item"><span>No sabía que estaba citada</span><span class="pill">1</span></div>
+            <div class="row-item"><span>Reagendada</span><span class="pill">1</span></div>
+          </div>
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Tipo de atención de contactados</p>
+          <table class="w-full text-sm text-left mb-4">
+            <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+              <th class="py-2 font-bold">Tipo de atención</th><th class="py-2 text-center font-bold">Contactados</th>
+            </tr></thead>
+            <tbody>
+              <tr class="border-b border-gray-50"><td class="py-2">Clínica lactancia materna seguimiento</td><td class="py-2 text-center text-green-600 font-semibold">1</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2">Control niño sano 3 años y 6 meses</td><td class="py-2 text-center text-green-600 font-semibold">1</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2">Control nutricional</td><td class="py-2 text-center text-green-600 font-semibold">6</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2">Control nutricional cardiovascular</td><td class="py-2 text-center text-green-600 font-semibold">10</td></tr>
+              <tr class="bg-green-50"><td class="py-2 font-bold text-green-700 pl-2">Total</td><td class="py-2 text-center font-bold text-green-700">18</td></tr>
+            </tbody>
+          </table>
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Cancelación de hora</p>
+          <div class="flex gap-8 justify-center mb-4 bg-gray-50 rounded-2xl py-5">
+            <div class="text-center"><p class="text-4xl font-black text-green-500">3</p><p class="text-[10px] font-bold text-gray-400 mt-1">SÍ PUDO</p></div>
+            <div class="h-12 w-[1px] bg-gray-200 self-center"></div>
+            <div class="text-center"><p class="text-4xl font-black text-red-400">15</p><p class="text-[10px] font-bold text-gray-400 mt-1">NO PUDO</p></div>
+          </div>
+          <button class="inner-accordion-btn" onclick="toggleInnerAcc(this)">
+            <span>Ver motivos de no cancelación (15)</span>
+            <i class="fas fa-chevron-down acc-arrow"></i>
+          </button>
+          <div class="inner-accordion-body">
+            <div class="row-item"><span>Olvido de hora</span><span class="pill">8</span></div>
+            <div class="row-item"><span>No sabía que estaba citada</span><span class="pill">4</span></div>
+            <div class="row-item"><span>Problemas con la app</span><span class="pill">2</span></div>
+            <div class="row-item"><span>No sabía cómo hacerlo</span><span class="pill">1</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRÁFICOS GABRIELA MARZO -->
+      <div class="accordion-wrap mt-6" style="border-color:#e0e7ff;">
+        <button class="accordion-btn" onclick="toggleAcc(this); initChartsGabriela()">
+          <div><div class="acc-title" style="color:#0077c8;">Ver gráficos</div><div class="acc-meta">Dona de contactabilidad, barras por tipo de atención y motivos</div></div>
+          <i class="fas fa-chart-bar acc-arrow" style="color:#0077c8;"></i>
+        </button>
+        <div class="accordion-body">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Contactabilidad — Marzo</p>
+              <canvas id="chart-gab-dona" height="220"></canvas>
+            </div>
+            <div>
+              <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Motivos de inasistencia</p>
+              <canvas id="chart-gab-motivos" height="220"></canvas>
+            </div>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Inasistencias por tipo de atención — Marzo</p>
+            <canvas id="chart-gab-tipo" height="120"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ENCUESTA ==================== -->
+  <section id="section-encuesta" class="section py-16">
+    <button class="back-btn" onclick="showSection('home')"><i class="fas fa-arrow-left text-xs"></i> Volver al inicio</button>
+    <div class="flex justify-between items-end mb-12 flex-wrap gap-4">
+      <div>
+        <p class="text-xs uppercase font-bold text-blue-primary tracking-widest mb-1">Sala de espera · CESFAM JPII · Marzo 2026</p>
+        <h2 class="text-5xl font-extrabold text-gray-900 tracking-tight">Encuesta «Tu hora importa»</h2>
+        <p class="text-gray-400 mt-2">Usuarios encuestados sobre inasistencia a controles nutricionales</p>
+      </div>
+      <div class="bg-gray-900 text-white px-8 py-4 rounded-3xl text-center">
+        <p class="text-[10px] uppercase font-bold opacity-60">Total encuestados</p>
+        <p class="text-3xl font-black">33</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+      <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Encuestados</p><h4 class="text-4xl font-extrabold text-blue-primary">33</h4></div>
+      <div class="kpi-card p-8 border-l-4 border-green-500"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Sí pudo cancelar</p><h4 class="text-4xl font-extrabold text-green-600">13</h4></div>
+      <div class="kpi-card p-8 border-l-4 border-red-400"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">No pudo cancelar</p><h4 class="text-4xl font-extrabold text-red-500">20</h4></div>
+      <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">No canceló</p><h4 class="text-4xl font-extrabold text-gray-700">61%</h4></div>
+    </div>
+
+    <!-- ACORDEÓN CONTENEDOR: MOTIVOS DE INASISTENCIA -->
+    <div class="accordion-wrap mb-8" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div>
+          <div class="acc-title" style="color:#0077c8;">Motivos de inasistencia</div>
+          <div class="acc-meta">33 encuestados · Clic para ver el desglose por motivo y cancelación</div>
+        </div>
+        <i class="fas fa-chevron-down acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+
+        <!-- ACORDEÓN MOTIVO 1: TRABAJO -->
+        <div class="accordion-wrap mb-3" style="border-left:4px solid #0077c8;border-radius:0 28px 28px 0;">
+          <button class="accordion-btn" onclick="toggleAcc(this)">
+            <div class="flex items-center gap-4">
+              <div class="text-2xl font-extrabold" style="color:#0077c8;">12</div>
+              <div><div class="acc-title">Trabajo o falta de tiempo</div><div class="acc-meta">Clic para ver si pudieron cancelar</div></div>
+            </div>
+            <i class="fas fa-chevron-down acc-arrow"></i>
+          </button>
+          <div class="accordion-body">
+            <div class="grid grid-cols-2 gap-4 mb-3">
+              <div class="bg-green-50 rounded-2xl p-4 text-center">
+                <p class="text-3xl font-black text-green-600">3</p>
+                <p class="text-xs font-bold text-green-700 uppercase tracking-widest mt-1">Sí cancelaron</p>
+                <p class="text-xs text-gray-400 mt-1">Pudieron avisar antes de la cita</p>
+              </div>
+              <div class="accordion-wrap mb-0" style="border-left:3px solid #ef4444;border-radius:0 16px 16px 0;">
+                <button class="accordion-btn py-3 px-4" onclick="toggleAcc(this)" style="border-radius:0 16px 16px 0;">
+                  <div class="text-center w-full">
+                    <p class="text-3xl font-black text-red-500">9</p>
+                    <p class="text-xs font-bold text-red-600 uppercase tracking-widest mt-1">No cancelaron</p>
+                    <p class="text-xs text-gray-400 mt-1">Ver motivos →</p>
+                  </div>
+                  <i class="fas fa-chevron-down acc-arrow text-red-400"></i>
+                </button>
+                <div class="accordion-body pt-0">
+                  <div class="row-item"><span>No sabía cómo cancelar</span><span class="pill text-red-500">7</span></div>
+                  <div class="row-item"><span>No recordó cancelar</span><span class="pill">2</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACORDEÓN MOTIVO 2: ASUNTOS PERSONALES -->
+        <div class="accordion-wrap mb-3" style="border-left:4px solid #0077c8;border-radius:0 28px 28px 0;">
+          <button class="accordion-btn" onclick="toggleAcc(this)">
+            <div class="flex items-center gap-4">
+              <div class="text-2xl font-extrabold" style="color:#0077c8;">11</div>
+              <div><div class="acc-title">Asuntos personales o familiares</div><div class="acc-meta">Clic para ver si pudieron cancelar</div></div>
+            </div>
+            <i class="fas fa-chevron-down acc-arrow"></i>
+          </button>
+          <div class="accordion-body">
+            <div class="grid grid-cols-2 gap-4 mb-3">
+              <div class="bg-green-50 rounded-2xl p-4 text-center">
+                <p class="text-3xl font-black text-green-600">5</p>
+                <p class="text-xs font-bold text-green-700 uppercase tracking-widest mt-1">Sí cancelaron</p>
+                <p class="text-xs text-gray-400 mt-1">Pudieron avisar antes de la cita</p>
+              </div>
+              <div class="accordion-wrap mb-0" style="border-left:3px solid #ef4444;border-radius:0 16px 16px 0;">
+                <button class="accordion-btn py-3 px-4" onclick="toggleAcc(this)" style="border-radius:0 16px 16px 0;">
+                  <div class="text-center w-full">
+                    <p class="text-3xl font-black text-red-500">6</p>
+                    <p class="text-xs font-bold text-red-600 uppercase tracking-widest mt-1">No cancelaron</p>
+                    <p class="text-xs text-gray-400 mt-1">Ver motivos →</p>
+                  </div>
+                  <i class="fas fa-chevron-down acc-arrow text-red-400"></i>
+                </button>
+                <div class="accordion-body pt-0">
+                  <div class="row-item"><span>No sabía cómo cancelar</span><span class="pill text-red-500">5</span></div>
+                  <div class="row-item"><span>No recordó cancelar</span><span class="pill">1</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACORDEÓN MOTIVO 3: PROBLEMAS DE SALUD -->
+        <div class="accordion-wrap mb-3" style="border-left:4px solid #0077c8;border-radius:0 28px 28px 0;">
+          <button class="accordion-btn" onclick="toggleAcc(this)">
+            <div class="flex items-center gap-4">
+              <div class="text-2xl font-extrabold" style="color:#0077c8;">6</div>
+              <div><div class="acc-title">Problemas de salud</div><div class="acc-meta">Clic para ver si pudieron cancelar</div></div>
+            </div>
+            <i class="fas fa-chevron-down acc-arrow"></i>
+          </button>
+          <div class="accordion-body">
+            <div class="grid grid-cols-2 gap-4 mb-3">
+              <div class="bg-green-50 rounded-2xl p-4 text-center">
+                <p class="text-3xl font-black text-green-600">2</p>
+                <p class="text-xs font-bold text-green-700 uppercase tracking-widest mt-1">Sí cancelaron</p>
+                <p class="text-xs text-gray-400 mt-1">Pudieron avisar antes de la cita</p>
+              </div>
+              <div class="accordion-wrap mb-0" style="border-left:3px solid #ef4444;border-radius:0 16px 16px 0;">
+                <button class="accordion-btn py-3 px-4" onclick="toggleAcc(this)" style="border-radius:0 16px 16px 0;">
+                  <div class="text-center w-full">
+                    <p class="text-3xl font-black text-red-500">4</p>
+                    <p class="text-xs font-bold text-red-600 uppercase tracking-widest mt-1">No cancelaron</p>
+                    <p class="text-xs text-gray-400 mt-1">Ver motivos →</p>
+                  </div>
+                  <i class="fas fa-chevron-down acc-arrow text-red-400"></i>
+                </button>
+                <div class="accordion-body pt-0">
+                  <div class="row-item"><span>No sabía cómo cancelar</span><span class="pill text-red-500">2</span></div>
+                  <div class="row-item"><span>No recordó cancelar</span><span class="pill">2</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACORDEÓN MOTIVO 4: OLVIDO -->
+        <div class="accordion-wrap mb-3" style="border-left:4px solid #0077c8;border-radius:0 28px 28px 0;">
+          <button class="accordion-btn" onclick="toggleAcc(this)">
+            <div class="flex items-center gap-4">
+              <div class="text-2xl font-extrabold" style="color:#0077c8;">3</div>
+              <div><div class="acc-title">Olvido</div><div class="acc-meta">Clic para ver si pudieron cancelar</div></div>
+            </div>
+            <i class="fas fa-chevron-down acc-arrow"></i>
+          </button>
+          <div class="accordion-body">
+            <div class="grid grid-cols-2 gap-4 mb-3">
+              <div class="bg-green-50 rounded-2xl p-4 text-center">
+                <p class="text-3xl font-black text-green-600">2</p>
+                <p class="text-xs font-bold text-green-700 uppercase tracking-widest mt-1">Sí cancelaron</p>
+                <p class="text-xs text-gray-400 mt-1">Pudieron avisar antes de la cita</p>
+              </div>
+              <div class="accordion-wrap mb-0" style="border-left:3px solid #ef4444;border-radius:0 16px 16px 0;">
+                <button class="accordion-btn py-3 px-4" onclick="toggleAcc(this)" style="border-radius:0 16px 16px 0;">
+                  <div class="text-center w-full">
+                    <p class="text-3xl font-black text-red-500">1</p>
+                    <p class="text-xs font-bold text-red-600 uppercase tracking-widest mt-1">No cancelaron</p>
+                    <p class="text-xs text-gray-400 mt-1">Ver motivos →</p>
+                  </div>
+                  <i class="fas fa-chevron-down acc-arrow text-red-400"></i>
+                </button>
+                <div class="accordion-body pt-0">
+                  <div class="row-item"><span>No recordó cancelar</span><span class="pill">1</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACORDEÓN MOTIVO 5: CESFAM -->
+        <div class="accordion-wrap mb-0" style="border-left:4px solid #0077c8;border-radius:0 28px 28px 0;">
+          <button class="accordion-btn" onclick="toggleAcc(this)">
+            <div class="flex items-center gap-4">
+              <div class="text-2xl font-extrabold" style="color:#0077c8;">1</div>
+              <div><div class="acc-title">Problemas relacionados con CESFAM</div><div class="acc-meta">Clic para ver si pudo cancelar</div></div>
+            </div>
+            <i class="fas fa-chevron-down acc-arrow"></i>
+          </button>
+          <div class="accordion-body">
+            <div class="bg-green-50 rounded-2xl p-4 text-center">
+              <p class="text-3xl font-black text-green-600">1</p>
+              <p class="text-xs font-bold text-green-700 uppercase tracking-widest mt-1">Sí canceló</p>
+              <p class="text-xs text-gray-400 mt-1">Pudo avisar antes de la cita — no aplica motivo de no cancelación</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- GRÁFICOS ENCUESTA -->
+    <div class="accordion-wrap mt-8" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this); initChartsEncuesta()">
+        <div><div class="acc-title" style="color:#0077c8;">Ver gráficos</div><div class="acc-meta">Motivos de inasistencia, cancelación y razones de no cancelar</div></div>
+        <i class="fas fa-chart-bar acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Motivos de inasistencia (33 encuestados)</p>
+            <canvas id="chart-enc-motivos" height="220"></canvas>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">¿Pudo cancelar la hora?</p>
+            <canvas id="chart-enc-cancelacion" height="220"></canvas>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Motivo de no cancelación (20)</p>
+            <canvas id="chart-enc-nocancelar" height="160"></canvas>
+          </div>
+          <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Sí canceló vs no canceló — por motivo de inasistencia</p>
+            <canvas id="chart-enc-grouped" height="160"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PLAN CORTO ==================== -->
+  <section id="section-plan-corto" class="section py-16">
+    <button class="back-btn" onclick="showSection('home')"><i class="fas fa-arrow-left text-xs"></i> Volver al inicio</button>
+    <div class="flex justify-between items-end mb-12 flex-wrap gap-4">
+      <div>
+        <p class="text-xs uppercase font-bold text-green-600 tracking-widest mb-1">Plan de mejora · Implementación inmediata</p>
+        <h2 class="text-5xl font-extrabold text-gray-900 tracking-tight">Corto plazo</h2>
+        <p class="text-gray-400 mt-2">Ejes 1, 2 y 3 — Costo cero, activación inmediata</p>
+      </div>
+      <span class="badge badge-green text-sm px-5 py-2">3 ejes · Costo cero</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="eje-card corto">
+        <div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 1</span><span class="badge badge-green">Costo cero</span></div>
+        <h4 class="text-lg font-bold mb-2">Ventanilla amigable</h4>
+        <p class="text-sm text-gray-500 mb-4">Datos de contacto erróneos o desactualizados impiden llegar a los pacientes.</p>
+        <div class="bg-gray-50 rounded-2xl p-4 text-sm text-gray-700">Personal SOME valida verbalmente número actual y alternativo familiar. Sticker en monitores: <em>"¿Validaste el teléfono?"</em></div>
+        <p class="text-xs text-blue-primary font-semibold mt-3">Dato clave: 3 a 14 pacientes no contactados por mes por datos incorrectos.</p>
+      </div>
+      <div class="eje-card corto">
+        <div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 2</span><span class="badge badge-green">Costo cero</span></div>
+        <h4 class="text-lg font-bold mb-2">WhatsApp Web Nutri</h4>
+        <p class="text-sm text-gray-500 mb-4">Saturación telefónica y lentitud en la comunicación con pacientes.</p>
+        <div class="bg-gray-50 rounded-2xl p-4 text-sm text-gray-700">Un número institucional único para todo el equipo. Cada nutricionista con sesión abierta en su PC para gestión de cancelaciones y rescate de cupos en tiempo real.</div>
+        <p class="text-xs text-blue-primary font-semibold mt-3">Permite recuperar horas clínicas el mismo día de la inasistencia.</p>
+      </div>
+      <div class="eje-card corto">
+        <div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 3</span><span class="badge badge-green">Costo cero</span></div>
+        <h4 class="text-lg font-bold mb-2">Lista de espera del día</h4>
+        <p class="text-sm text-gray-500 mb-4">Pérdida de horas clínicas por inasistencias sin aviso previo.</p>
+        <div class="bg-gray-50 rounded-2xl p-4 text-sm text-gray-700">Registro en papel o Excel de pacientes presentes en sala de espera con disponibilidad inmediata. Se llama al primero de la lista ante cualquier inasistencia.</div>
+        <p class="text-xs text-blue-primary font-semibold mt-3">Recupera la hora clínica sin sobrecargar la agenda programada.</p>
+      </div>
+    </div>
+
+    <!-- CONTEXTO CORTO PLAZO -->
+    <div class="accordion-wrap mt-8" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-title" style="color:#0077c8;">Ver contexto y justificación</div><div class="acc-meta">Diagnóstico, problema central e indicadores de estos ejes</div></div>
+        <i class="fas fa-info-circle acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Problema que abordan estos ejes</p>
+        <div class="bg-red-50 rounded-2xl p-5 mb-4">
+          <p class="text-sm font-bold text-red-700 mb-2">Alta tasa de inasistencia a controles nutricionales — CESFAM Juan Pablo II</p>
+          <p class="text-sm text-gray-600">En marzo 2026 se registraron <strong>79 inasistencias</strong> entre las 3 nutricionistas. El <strong>35% de los inasistentes no pudo ser contactado</strong> por datos desactualizados, celulares apagados o números erróneos. Los ejes 1, 2 y 3 atacan directamente estas causas de forma inmediata y sin costo.</p>
+        </div>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Datos que fundamentan la urgencia</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div class="kpi-card p-5 text-center"><p class="text-xs font-bold text-gray-400 mb-1">No contactados marzo</p><p class="text-3xl font-extrabold text-red-500">28</p><p class="text-xs text-gray-400 mt-1">de 79 inasistentes</p></div>
+          <div class="kpi-card p-5 text-center"><p class="text-xs font-bold text-gray-400 mb-1">Tasa de contacto</p><p class="text-3xl font-extrabold text-yellow-600">65%</p><p class="text-xs text-gray-400 mt-1">promedio 3 nutricionistas</p></div>
+          <div class="kpi-card p-5 text-center"><p class="text-xs font-bold text-gray-400 mb-1">Cupos perdidos</p><p class="text-3xl font-extrabold text-blue-primary">79</p><p class="text-xs text-gray-400 mt-1">horas clínicas en 1 mes</p></div>
+        </div>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Meta de este componente</p>
+        <div class="row-item"><span class="font-semibold">Aumentar tasa de contacto del 65% al 85%</span><span class="pill text-green-600">6 meses</span></div>
+        <div class="row-item"><span>Medio de verificación</span><span class="pill">Registro mensual de seguimiento telefónico</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PLAN MEDIANO ==================== -->
+  <section id="section-plan-mediano" class="section py-16">
+    <button class="back-btn" onclick="showSection('home')"><i class="fas fa-arrow-left text-xs"></i> Volver al inicio</button>
+    <div class="flex justify-between items-end mb-12 flex-wrap gap-4">
+      <div>
+        <p class="text-xs uppercase font-bold text-yellow-600 tracking-widest mb-1">Plan de mejora · 1 a 3 meses</p>
+        <h2 class="text-5xl font-extrabold text-gray-900 tracking-tight">Mediano plazo</h2>
+        <p class="text-gray-400 mt-2">Ejes 4, 5 y 6 — Requieren coordinación o recursos mínimos</p>
+      </div>
+      <span class="badge badge-amber text-sm px-5 py-2">3 ejes · 1–3 meses</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="eje-card mediano">
+        <div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 4</span><span class="badge badge-blue">Ya existe parcialmente</span></div>
+        <h4 class="text-lg font-bold mb-2">Recordatorios omnicanal T-3 / T-1 / T-0</h4>
+        <p class="text-sm text-gray-500 mb-4">El aviso con solo 24 horas no permite reasignar el cupo a tiempo.</p>
+        <div class="bg-gray-50 rounded-2xl p-4 text-sm text-gray-700">Expandir el sistema actual (T-1 ya existe vía app) agregando aviso a 3 días antes y mensaje el mismo día. Incluir instrucciones claras de cancelación en cada mensaje.</div>
+        <p class="text-xs text-blue-primary font-semibold mt-3">El 70% no canceló por desconocer cómo hacerlo.</p>
+      </div>
+      <div class="eje-card mediano">
+        <div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 5</span><span class="badge badge-amber">Bajo costo</span></div>
+        <h4 class="text-lg font-bold mb-2">Infografía institucional en material lavable</h4>
+        <p class="text-sm text-gray-500 mb-4">El 70% de los usuarios desconoce el proceso de cancelación.</p>
+        <div class="bg-gray-50 rounded-2xl p-4 text-sm text-gray-700">Infografía en PVC o tela en sector PNAC y entrada SOME. Código QR para descarga de la app e instrucciones paso a paso. Refuerzo presencial en stands mensuales.</div>
+        <p class="text-xs text-blue-primary font-semibold mt-3">Diseño realizado por la interna bajo estándares institucionales.</p>
+      </div>
+      <div class="eje-card mediano">
+        <div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 6</span><span class="badge badge-amber">Coordinación interna</span></div>
+        <h4 class="text-lg font-bold mb-2">Continuidad del cuidado y abordaje psicosocial</h4>
+        <p class="text-sm text-gray-500 mb-4">Pacientes con 3 o más inasistencias en riesgo de abandono del tratamiento.</p>
+        <div class="bg-gray-50 rounded-2xl p-4 text-sm text-gray-700">A la tercera inasistencia, la nutricionista realiza contacto directo. Si hay inamovilidad o dependencia, se evalúa vinculación a PADDS o derivación a dupla psicosocial.</div>
+        <p class="text-xs text-blue-primary font-semibold mt-3">Garantiza el derecho a la salud identificando vulnerabilidades no detectadas.</p>
+      </div>
+    </div>
+
+    <!-- CONTEXTO MEDIANO PLAZO -->
+    <div class="accordion-wrap mt-8" style="border-color:#fef3c7;">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-title" style="color:#92400e;">Ver contexto y justificación</div><div class="acc-meta">Diagnóstico, barreras de usuario e indicadores de estos ejes</div></div>
+        <i class="fas fa-info-circle acc-arrow" style="color:#92400e;"></i>
+      </button>
+      <div class="accordion-body">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Barrera principal que abordan estos ejes</p>
+        <div class="bg-yellow-50 rounded-2xl p-5 mb-4">
+          <p class="text-sm font-bold text-yellow-800 mb-2">El 70% de los usuarios no sabe cómo cancelar una hora</p>
+          <p class="text-sm text-gray-600">La encuesta "Tu hora importa" (n=33) reveló que el principal motivo de no cancelación es el <strong>desconocimiento del proceso</strong>, no la falta de voluntad. Los ejes 4, 5 y 6 abordan esta brecha educativa y la continuidad del cuidado en casos complejos.</p>
+        </div>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Datos que fundamentan la intervención</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div class="kpi-card p-5 text-center"><p class="text-xs font-bold text-gray-400 mb-1">No sabía cómo cancelar</p><p class="text-3xl font-extrabold text-red-500">70%</p><p class="text-xs text-gray-400 mt-1">de los que no cancelaron</p></div>
+          <div class="kpi-card p-5 text-center"><p class="text-xs font-bold text-gray-400 mb-1">Recordatorio actual</p><p class="text-3xl font-extrabold text-yellow-600">T-1</p><p class="text-xs text-gray-400 mt-1">solo 24 hrs antes</p></div>
+          <div class="kpi-card p-5 text-center"><p class="text-xs font-bold text-gray-400 mb-1">No cancelaron</p><p class="text-3xl font-extrabold text-blue-primary">61%</p><p class="text-xs text-gray-400 mt-1">de 33 encuestados</p></div>
+        </div>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Metas de este componente</p>
+        <div class="row-item"><span class="font-semibold">Aumentar del 30% al 70% usuarios que conocen cómo cancelar</span><span class="pill text-yellow-700">6 meses</span></div>
+        <div class="row-item"><span>Reducir en un 20% la inasistencia no justificada</span><span class="pill">Segundo semestre 2026</span></div>
+        <div class="row-item"><span>Medio de verificación</span><span class="pill">Encuesta pre/post sala de espera</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PLAN COMPLETO ==================== -->
+  <section id="section-plan-completo" class="section py-16">
+    <button class="back-btn" onclick="showSection('home')"><i class="fas fa-arrow-left text-xs"></i> Volver al inicio</button>
+    <div class="flex justify-between items-end mb-4 flex-wrap gap-4">
+      <div>
+        <p class="text-xs uppercase font-bold text-blue-primary tracking-widest mb-1">CESFAM Juan Pablo II · Segundo semestre 2026</p>
+        <h2 class="text-5xl font-extrabold text-gray-900 tracking-tight">Plan completo</h2>
+        <p class="text-gray-400 mt-2">Estrategia de reducción de la inasistencia a controles nutricionales</p>
+      </div>
+      <span class="badge badge-dark text-sm px-5 py-2">6 ejes estratégicos</span>
+    </div>
+
+    <!-- KPIs resumen -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Inasistencias marzo</p><h4 class="text-4xl font-extrabold text-red-500">79</h4><p class="text-xs text-gray-400 mt-1">Línea de base</p></div>
+      <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Meta reducción</p><h4 class="text-4xl font-extrabold text-green-600">20%</h4><p class="text-xs text-gray-400 mt-1">En 6 meses</p></div>
+      <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Tasa contacto actual</p><h4 class="text-4xl font-extrabold text-yellow-600">65%</h4><p class="text-xs text-gray-400 mt-1">Meta: 85%</p></div>
+      <div class="kpi-card p-8"><p class="text-xs uppercase font-bold text-gray-400 mb-2 tracking-widest">Costo proyectado</p><h4 class="text-4xl font-extrabold text-blue-primary">$35K</h4><p class="text-xs text-gray-400 mt-1">Total estimado</p></div>
+    </div>
+
+    <!-- ACORDEÓN DIAGNÓSTICO -->
+    <div class="accordion-wrap mb-4" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-title" style="color:#0077c8;">1. Diagnóstico y planteamiento del problema</div><div class="acc-meta">Datos de inasistencia enero–marzo 2026 y contexto del CESFAM</div></div>
+        <i class="fas fa-chevron-down acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+        <div class="bg-red-50 rounded-2xl p-5 mb-5">
+          <p class="text-sm font-bold text-red-700 mb-2">Problema central</p>
+          <p class="text-sm text-gray-700">Alta tasa de inasistencia no justificada a controles nutricionales en el CESFAM Juan Pablo II, con 79 inasistencias registradas en marzo 2026 y 190 inasistencias acumuladas en Gabriela Mundaca entre enero y marzo 2026. El 35% de los inasistentes no pudo ser contactado y el 61% de los que faltaron no canceló su hora previamente.</p>
+        </div>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Inasistencias por nutricionista — Marzo 2026</p>
+        <table class="w-full text-sm text-left mb-5">
+          <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+            <th class="py-2 font-bold">Nutricionista</th><th class="py-2 text-center font-bold">Inasistencias</th><th class="py-2 text-center font-bold">Contactados</th><th class="py-2 text-center font-bold">No contactados</th><th class="py-2 text-center font-bold">Tasa contacto</th>
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-gray-50"><td class="py-2">Carolina Ceballos</td><td class="py-2 text-center">16</td><td class="py-2 text-center text-green-600 font-semibold">13</td><td class="py-2 text-center text-red-400 font-semibold">3</td><td class="py-2 text-center font-bold text-green-600">81%</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Constanza Pardo</td><td class="py-2 text-center">31</td><td class="py-2 text-center text-green-600 font-semibold">20</td><td class="py-2 text-center text-red-400 font-semibold">11</td><td class="py-2 text-center font-bold text-yellow-600">65%</td></tr>
+            <tr class="border-b border-gray-50"><td class="py-2">Gabriela Mundaca</td><td class="py-2 text-center">32</td><td class="py-2 text-center text-green-600 font-semibold">18</td><td class="py-2 text-center text-red-400 font-semibold">14</td><td class="py-2 text-center font-bold text-red-500">56%</td></tr>
+            <tr class="bg-blue-50"><td class="py-2 font-bold text-blue-primary pl-2">Total</td><td class="py-2 text-center font-bold text-blue-primary">79</td><td class="py-2 text-center font-bold text-blue-primary">51</td><td class="py-2 text-center font-bold text-blue-primary">28</td><td class="py-2 text-center font-bold text-blue-primary">65%</td></tr>
+          </tbody>
+        </table>
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Principales causas identificadas</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-gray-50 rounded-2xl p-4"><p class="text-xs font-bold text-gray-500 uppercase mb-2">Causa 1</p><p class="text-sm font-semibold">Barreras de información</p><p class="text-xs text-gray-500 mt-1">70% no sabe cómo cancelar · No recibe recordatorios con anticipación suficiente</p></div>
+          <div class="bg-gray-50 rounded-2xl p-4"><p class="text-xs font-bold text-gray-500 uppercase mb-2">Causa 2</p><p class="text-sm font-semibold">Deficiencias del sistema de contacto</p><p class="text-xs text-gray-500 mt-1">35% no contactado · Datos desactualizados · Un solo canal (llamada)</p></div>
+          <div class="bg-gray-50 rounded-2xl p-4"><p class="text-xs font-bold text-gray-500 uppercase mb-2">Causa 3</p><p class="text-sm font-semibold">Factores del usuario</p><p class="text-xs text-gray-500 mt-1">Trabajo/tiempo (36%) · Asuntos personales (33%) · Olvido (16%)</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACORDEÓN INTERESADOS -->
+    <div class="accordion-wrap mb-4" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-title" style="color:#0077c8;">2. Análisis de interesados</div><div class="acc-meta">Actores clave, expectativas y nivel de influencia</div></div>
+        <i class="fas fa-chevron-down acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+              <th class="py-2 font-bold">Interesado</th><th class="py-2 font-bold">Expectativa</th><th class="py-2 text-center font-bold">Poder (0–5)</th><th class="py-2 text-center font-bold">Valor (-3/+3)</th><th class="py-2 text-center font-bold">Efecto</th>
+            </tr></thead>
+            <tbody>
+              <tr class="border-b border-gray-50"><td class="py-3 font-semibold">Director/a CESFAM</td><td class="py-3 text-gray-500 text-xs">Mejorar cobertura y uso eficiente de recursos</td><td class="py-3 text-center">5</td><td class="py-3 text-center text-green-600 font-bold">+3</td><td class="py-3 text-center font-bold text-green-600">+15</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-3 font-semibold">Subdirector/a CESFAM</td><td class="py-3 text-gray-500 text-xs">Asegurar implementación operativa del proyecto</td><td class="py-3 text-center">5</td><td class="py-3 text-center text-green-600 font-bold">+2</td><td class="py-3 text-center font-bold text-green-600">+10</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-3 font-semibold">Nutricionistas</td><td class="py-3 text-gray-500 text-xs">Reducir inasistencias y optimizar agenda clínica</td><td class="py-3 text-center">5</td><td class="py-3 text-center text-green-600 font-bold">+3</td><td class="py-3 text-center font-bold text-green-600">+15</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-3 font-semibold">Personal SOME</td><td class="py-3 text-gray-500 text-xs">Mejorar registro de datos y gestión de agenda</td><td class="py-3 text-center">4</td><td class="py-3 text-center text-green-600 font-bold">+2</td><td class="py-3 text-center font-bold text-green-600">+8</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-3 font-semibold">Informático / soporte TIC</td><td class="py-3 text-gray-500 text-xs">Implementar y mantener sistema de recordatorios</td><td class="py-3 text-center">3</td><td class="py-3 text-center text-green-600 font-bold">+2</td><td class="py-3 text-center font-bold text-green-600">+6</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-3 font-semibold">Usuarios del CESFAM</td><td class="py-3 text-gray-500 text-xs">Acceso oportuno y facilidad para cancelar horas</td><td class="py-3 text-center">4</td><td class="py-3 text-center text-green-600 font-bold">+3</td><td class="py-3 text-center font-bold text-green-600">+12</td></tr>
+              <tr class="bg-blue-50"><td class="py-2 font-bold text-blue-primary pl-2" colspan="4">Efecto total</td><td class="py-2 text-center font-black text-blue-primary">+66</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="bg-green-50 rounded-2xl p-4 mt-4">
+          <p class="text-sm font-bold text-green-700 mb-1">Alta viabilidad política</p>
+          <p class="text-sm text-gray-600">El proyecto se alinea con la Estrategia Nacional de Salud 2021–2030 (MINSAL), los objetivos de cobertura de la APS y el ODS N.º 3 "Salud y Bienestar". Sus componentes de corto plazo son de costo cero, lo que facilita la aprobación institucional.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACORDEÓN MARCO LÓGICO -->
+    <div class="accordion-wrap mb-4" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-title" style="color:#0077c8;">3. Marco lógico</div><div class="acc-meta">Propósito, componentes, indicadores, metas y supuestos</div></div>
+        <i class="fas fa-chevron-down acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
+            <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+              <th class="py-2 font-bold w-[20%]">Jerarquía</th><th class="py-2 font-bold w-[25%]">Indicador</th><th class="py-2 font-bold w-[20%]">Meta</th><th class="py-2 font-bold w-[20%]">Verificación</th><th class="py-2 font-bold w-[15%]">Supuesto</th>
+            </tr></thead>
+            <tbody>
+              <tr class="border-b border-gray-50 bg-gray-50"><td class="py-3 font-bold text-gray-700">Fin</td><td class="py-3 text-gray-500 text-xs" colspan="4">Mejorar la continuidad del cuidado nutricional y la gestión de ECNT en usuarios del CESFAM JPII</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-3 font-semibold text-blue-primary">Propósito</td><td class="py-3 text-xs">Tasa mensual de inasistencia a controles nutricionales</td><td class="py-3 text-xs font-semibold">Reducir 20% respecto a línea de base en 6 meses</td><td class="py-3 text-xs">Registro mensual por nutricionista</td><td class="py-3 text-xs">Dirección apoya implementación</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-3 font-semibold text-green-700">Componente 1</td><td class="py-3 text-xs">Tasa de contacto mensual de inasistentes</td><td class="py-3 text-xs font-semibold">Del 65% al 85% en 6 meses</td><td class="py-3 text-xs">Registro seguimiento telefónico</td><td class="py-3 text-xs">SOME implementa protocolo</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-3 font-semibold text-blue-700">Componente 2</td><td class="py-3 text-xs">% usuarios con recordatorio T-3 antes de su control</td><td class="py-3 text-xs font-semibold">80% de cobertura en primeros 3 meses</td><td class="py-3 text-xs">Registro de envíos app institucional</td><td class="py-3 text-xs">Sistema permite programar T-3</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-3 font-semibold text-yellow-700">Componente 3</td><td class="py-3 text-xs">% usuarios que conocen proceso de cancelación</td><td class="py-3 text-xs font-semibold">Del 30% al 70% al final del semestre</td><td class="py-3 text-xs">Encuesta pre/post sala de espera</td><td class="py-3 text-xs">Usuarios acceden a materiales educativos</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- EJES ESTRATÉGICOS -->
+    <p class="text-xs font-bold text-green-700 uppercase tracking-widest mb-4 mt-6">Corto plazo — implementación inmediata, costo cero</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="eje-card corto"><div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 1</span><span class="badge badge-green">Costo cero</span></div><h4 class="text-base font-bold mb-2">Ventanilla amigable</h4><p class="text-sm text-gray-500 mb-3">Datos de contacto erróneos impiden llegar a los pacientes.</p><div class="bg-gray-50 rounded-2xl p-3 text-sm text-gray-700">Validación verbal en SOME + sticker recordatorio en monitores.</div></div>
+      <div class="eje-card corto"><div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 2</span><span class="badge badge-green">Costo cero</span></div><h4 class="text-base font-bold mb-2">WhatsApp Web Nutri</h4><p class="text-sm text-gray-500 mb-3">Saturación telefónica y lentitud en la comunicación.</p><div class="bg-gray-50 rounded-2xl p-3 text-sm text-gray-700">Número institucional único. Gestión de cancelaciones en tiempo real.</div></div>
+      <div class="eje-card corto"><div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 3</span><span class="badge badge-green">Costo cero</span></div><h4 class="text-base font-bold mb-2">Lista de espera del día</h4><p class="text-sm text-gray-500 mb-3">Pérdida de horas clínicas sin aviso previo.</p><div class="bg-gray-50 rounded-2xl p-3 text-sm text-gray-700">Registro de pacientes con disponibilidad inmediata. Se llama ante inasistencias.</div></div>
+    </div>
+
+    <p class="text-xs font-bold text-yellow-700 uppercase tracking-widest mb-4">Mediano plazo — 1 a 3 meses</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="eje-card mediano"><div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 4</span><span class="badge badge-blue">Ya existe parcialmente</span></div><h4 class="text-base font-bold mb-2">Recordatorios T-3 / T-1 / T-0</h4><p class="text-sm text-gray-500 mb-3">El aviso de 24 hrs no permite reasignar el cupo.</p><div class="bg-gray-50 rounded-2xl p-3 text-sm text-gray-700">Expandir sistema con aviso a 3 días e instrucciones de cancelación.</div></div>
+      <div class="eje-card mediano"><div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 5</span><span class="badge badge-amber">Bajo costo</span></div><h4 class="text-base font-bold mb-2">Infografía en material lavable</h4><p class="text-sm text-gray-500 mb-3">El 70% desconoce el proceso de cancelación.</p><div class="bg-gray-50 rounded-2xl p-3 text-sm text-gray-700">Infografía PVC en sector PNAC y SOME con QR e instrucciones.</div></div>
+      <div class="eje-card mediano"><div class="flex justify-between items-start mb-3"><span class="text-xs font-bold text-gray-400">Eje 6</span><span class="badge badge-amber">Coordinación interna</span></div><h4 class="text-base font-bold mb-2">Abordaje psicosocial</h4><p class="text-sm text-gray-500 mb-3">Pacientes con 3+ inasistencias en riesgo de abandono.</p><div class="bg-gray-50 rounded-2xl p-3 text-sm text-gray-700">Contacto directo a tercera inasistencia. Vinculación a PADDS o dupla.</div></div>
+    </div>
+
+    <!-- CARTA GANTT -->
+    <div class="accordion-wrap mb-4" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-title" style="color:#0077c8;">4. Carta Gantt — Segundo semestre 2026</div><div class="acc-meta">Cronograma de implementación por mes</div></div>
+        <i class="fas fa-chevron-down acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm min-w-[600px]">
+            <thead><tr class="text-xs uppercase tracking-widest text-gray-400 border-b border-gray-100">
+              <th class="py-3 font-bold text-left w-[28%]">Actividad</th>
+              <th class="py-3 text-center bg-gray-50 w-[9%]">Jul</th>
+              <th class="py-3 text-center bg-gray-50 w-[9%]">Ago</th>
+              <th class="py-3 text-center bg-gray-50 w-[9%]">Sep</th>
+              <th class="py-3 text-center bg-gray-50 w-[9%]">Oct</th>
+              <th class="py-3 text-center bg-gray-50 w-[9%]">Nov</th>
+              <th class="py-3 text-center bg-gray-50 w-[9%]">Dic</th>
+              <th class="py-3 text-left w-[18%]">Estado</th>
+            </tr></thead>
+            <tbody>
+              <tr class="border-b border-gray-50 bg-gray-50"><td class="py-2 font-bold text-gray-500 text-xs uppercase pl-2" colspan="8">Actividades generales</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2 text-xs">Reunión con directivos — presentación</td><td class="py-2 px-1"><div class="gantt-bar bg-gray-400"></div></td><td></td><td></td><td></td><td></td><td></td><td class="text-xs text-gray-500">Jul</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2 text-xs">Levantamiento línea de base jul 2026</td><td class="py-2 px-1"><div class="gantt-bar bg-gray-400"></div></td><td></td><td></td><td></td><td></td><td></td><td class="text-xs text-gray-500">Jul</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2 text-xs">Monitoreo mensual de inasistencias</td><td class="py-2 px-1"><div class="gantt-bar bg-gray-300"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-gray-300"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-gray-300"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-gray-300"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-gray-300"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-gray-300"></div></td><td class="text-xs text-gray-500">Permanente</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2 text-xs">Evaluación final y entrega resultados</td><td></td><td></td><td></td><td></td><td></td><td class="py-2 px-1"><div class="gantt-bar bg-gray-600"></div></td><td class="text-xs text-gray-500">Dic</td></tr>
+              <tr class="border-b border-gray-50 bg-gray-50"><td class="py-2 font-bold text-gray-500 text-xs uppercase pl-2" colspan="8">Componente 1 — Contactabilidad (Ejes 1, 2, 3)</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2 text-xs">Eje 1 · Ventanilla amigable</td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="text-xs text-green-700 font-bold">Permanente</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2 text-xs">Eje 2 · WhatsApp Web Nutri</td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="text-xs text-green-700 font-bold">Permanente</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2 text-xs">Eje 3 · Lista de espera del día</td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-green-600"></div></td><td class="text-xs text-green-700 font-bold">Permanente</td></tr>
+              <tr class="border-b border-gray-50 bg-gray-50"><td class="py-2 font-bold text-gray-500 text-xs uppercase pl-2" colspan="8">Componente 2 — Recordatorios (Eje 4)</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2 text-xs">Eje 4 · Recordatorios T-3/T-1/T-0</td><td class="py-2 px-1"><div class="gantt-bar bg-blue-200"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-blue-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-blue-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-blue-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-blue-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-blue-500"></div></td><td class="text-xs text-blue-700 font-bold">Ago en adelante</td></tr>
+              <tr class="border-b border-gray-50 bg-gray-50"><td class="py-2 font-bold text-gray-500 text-xs uppercase pl-2" colspan="8">Componente 3 — Educación usuaria (Ejes 5, 6)</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2 text-xs">Eje 5 · Infografía institucional</td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-200"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="text-xs text-yellow-700 font-bold">Ago en adelante</td></tr>
+              <tr class="border-b border-gray-50"><td class="py-2 text-xs">Stand mensual "Tu hora importa"</td><td></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td></td><td class="text-xs text-yellow-700 font-bold">Ago–Nov</td></tr>
+              <tr><td class="py-2 text-xs">Eje 6 · Abordaje psicosocial</td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-200"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-200"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="py-2 px-1"><div class="gantt-bar bg-yellow-500"></div></td><td class="text-xs text-yellow-700 font-bold">Sep en adelante</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex gap-6 mt-4 flex-wrap">
+          <div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-green-600"></div><span class="text-xs text-gray-500">Activo corto plazo</span></div>
+          <div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-yellow-500"></div><span class="text-xs text-gray-500">Activo mediano plazo</span></div>
+          <div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-blue-500"></div><span class="text-xs text-gray-500">Expansión sistema existente</span></div>
+          <div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-yellow-200"></div><span class="text-xs text-gray-500">Preparación</span></div>
+          <div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-gray-400"></div><span class="text-xs text-gray-500">Actividad general</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLUJO DE COSTOS -->
+    <div class="accordion-wrap mb-4" style="border-color:#e0e7ff;">
+      <button class="accordion-btn" onclick="toggleAcc(this)">
+        <div><div class="acc-title" style="color:#0077c8;">5. Flujo de costos</div><div class="acc-meta">Presupuesto estimado por componente y plazo</div></div>
+        <i class="fas fa-chevron-down acc-arrow" style="color:#0077c8;"></i>
+      </button>
+      <div class="accordion-body">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Corto plazo — costo cero</p>
+        <div class="row-item mb-2"><span>Eje 1 · Sticker/impresión monitores SOME</span><span class="pill text-green-600">$0 (impresión interna)</span></div>
+        <div class="row-item mb-2"><span>Eje 2 · WhatsApp Web + PC ya existente</span><span class="pill text-green-600">$0</span></div>
+        <div class="row-item mb-6"><span>Eje 3 · Registro papel o Excel</span><span class="pill text-green-600">$0</span></div>
+
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Mediano plazo — bajo costo</p>
+        <div class="row-item mb-2"><span>Eje 4 · Coordinación app institucional</span><span class="pill text-yellow-700">$0 – $15.000</span></div>
+        <div class="row-item mb-2"><span>Eje 5 · Infografía PVC 60×90 cm (diseño + impresión)</span><span class="pill text-yellow-700">$25.000 – $40.000</span></div>
+        <div class="row-item mb-2"><span>Eje 5 · Material educativo impreso x200 unidades</span><span class="pill text-yellow-700">$10.000 – $15.000</span></div>
+        <div class="row-item mb-6"><span>Eje 6 · Abordaje psicosocial (usa dupla ya existente)</span><span class="pill text-green-600">$0</span></div>
+
+        <div class="bg-blue-50 rounded-2xl p-5 flex justify-between items-center">
+          <div>
+            <p class="text-sm font-bold text-blue-primary">Costo total estimado del proyecto</p>
+            <p class="text-xs text-gray-500 mt-1">3 de los 6 ejes son completamente gratuitos</p>
+          </div>
+          <div class="text-right">
+            <p class="text-3xl font-extrabold text-blue-primary">$35.000</p>
+            <p class="text-xs text-gray-400">hasta $70.000 (máximo)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+  let activeCharts = [];
+
+  function showSection(id) {
+    document.querySelectorAll('main > section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('section-' + id).classList.add('active');
+    const navEl = document.getElementById('nav-' + id);
+    if (navEl) navEl.classList.add('active');
+    closeDropdowns();
+
+    const homeSection = document.getElementById('section-home');
+    const homeTitle = document.getElementById('home-title');
+    const homeSub = document.getElementById('home-sub');
+    const homeDesc = document.getElementById('home-desc');
+
+    if (id === 'home') {
+      homeSection.style.padding = '80px 0';
+      homeSection.style.height = '';
+      homeSection.style.overflow = '';
+      homeTitle.style.fontSize = '4.5rem';
+      homeTitle.style.marginBottom = '0.5rem';
+      homeSub.style.fontSize = '1.4rem';
+      homeSub.style.marginBottom = '1rem';
+      homeSub.style.opacity = '1';
+    } else {
+      homeSection.style.padding = '0';
+      homeSection.style.height = '0';
+      homeSection.style.overflow = 'hidden';
+      homeTitle.style.fontSize = '0';
+      homeTitle.style.marginBottom = '0';
+      homeSub.style.fontSize = '0';
+      homeSub.style.marginBottom = '0';
+      homeSub.style.opacity = '0';
+    }
+
+    setTimeout(() => { window.scrollTo(0,0); }, 0);
+  }
+
+  function toggleDropdown(id) {
+    const dropdown = document.getElementById(id);
+    const menu = dropdown.querySelector('.dropdown-menu');
+    const isOpen = menu.classList.contains('open');
+    closeDropdowns();
+    if (!isOpen) menu.classList.add('open');
+  }
+
+  function closeDropdowns() {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.dropdown')) closeDropdowns();
+  });
+
+  function showGabTab(id, btn) {
+    document.querySelectorAll('#section-gabriela .sub-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('#section-gabriela .tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('gab-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function toggleAcc(btn) {
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+  }
+
+  function toggleInnerAcc(btn) {
+    btn.classList.toggle('open');
+    btn.nextElementSibling.classList.toggle('open');
+  }
+
+  const chartInstances = {};
+  function destroyChart(id) {
+    if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+  }
+
+  function makeDonut(id, contactados, noContactados) {
+    destroyChart(id);
+    chartInstances[id] = new Chart(document.getElementById(id), {
+      type: 'doughnut',
+      data: { labels: ['Contactados', 'No contactados'], datasets: [{ data: [contactados, noContactados], backgroundColor: ['#22c55e','#ef4444'], borderWidth: 0 }] },
+      options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }, cutout: '65%' }
+    });
+  }
+
+  function makeHBar(id, labels, data, color) {
+    destroyChart(id);
+    chartInstances[id] = new Chart(document.getElementById(id), {
+      type: 'bar',
+      data: { labels, datasets: [{ data, backgroundColor: color, borderRadius: 6 }] },
+      options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 10 } } }, y: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+    });
+  }
+
+  function makeGroupedBar(id, labels, datasets) {
+    destroyChart(id);
+    chartInstances[id] = new Chart(document.getElementById(id), {
+      type: 'bar',
+      data: { labels, datasets },
+      options: { responsive: true, plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 } } } }, scales: { x: { grid: { display: false }, ticks: { font: { size: 9 } } }, y: { beginAtZero: true, grid: { display: false } } } }
+    });
+  }
+
+  let chartsCarolinaInit = false;
+  function initChartsCarolina() {
+    if (chartsCarolinaInit) return; chartsCarolinaInit = true;
+    setTimeout(() => {
+      makeDonut('chart-car-dona', 13, 3);
+      makeHBar('chart-car-motivos', ['Salud','No sabía citada','Olvido','Asuntos pers.','Trabajo'], [3,3,2,2,2], '#0077c8');
+      makeGroupedBar('chart-car-tipo',
+        ['Cons. lactancia','Niño sano 3a6m','Ctrl. nutricional','Ctrl. cardiovasc.','EMP'],
+        [
+          { label: 'Contactados', data: [1,2,7,2,1], backgroundColor: '#22c55e', borderRadius: 4 },
+          { label: 'No contactados', data: [0,0,2,1,0], backgroundColor: '#ef4444', borderRadius: 4 }
+        ]
+      );
+    }, 100);
+  }
+
+  let chartsConstanzaInit = false;
+  function initChartsConstanza() {
+    if (chartsConstanzaInit) return; chartsConstanzaInit = true;
+    setTimeout(() => {
+      makeDonut('chart-con-dona', 20, 11);
+      makeHBar('chart-con-motivos', ['Asuntos pers.','Viaje','Salud','No sabía citada','Trabajo','Olvido','Reagendada'], [9,3,2,2,2,1,1], '#16a34a');
+      makeGroupedBar('chart-con-tipo',
+        ['Lact. alerta','Lact. seg.','Niño sano 3a6m','Ctrl. nutricional','Ctrl. cardiovasc.','EMP'],
+        [
+          { label: 'Contactados', data: [3,2,1,5,8,1], backgroundColor: '#22c55e', borderRadius: 4 },
+          { label: 'No contactados', data: [1,0,1,4,4,1], backgroundColor: '#ef4444', borderRadius: 4 }
+        ]
+      );
+    }, 100);
+  }
+
+  let chartsGabrielaInit = false;
+  function initChartsGabriela() {
+    if (chartsGabrielaInit) return; chartsGabrielaInit = true;
+    setTimeout(() => {
+      makeDonut('chart-gab-dona', 18, 14);
+      makeHBar('chart-gab-motivos', ['Olvido','Asuntos pers.','Salud','Trabajo','Viaje','No sabía citada','Reagendada'], [5,4,3,3,1,1,1], '#7c3aed');
+      makeGroupedBar('chart-gab-tipo',
+        ['Lact. seg.','Niño sano 3a6m','Ctrl. nutricional','Ctrl. cardiovasc.'],
+        [
+          { label: 'Contactados', data: [1,1,6,10], backgroundColor: '#22c55e', borderRadius: 4 },
+          { label: 'No contactados', data: [0,1,6,7], backgroundColor: '#ef4444', borderRadius: 4 }
+        ]
+      );
+    }, 100);
+  }
+
+  let chartsGabCompInit = false;
+  function initChartsGabComp() {
+    if (chartsGabCompInit) return; chartsGabCompInit = true;
+    setTimeout(() => {
+      destroyChart('chart-gabcomp-meses');
+      chartInstances['chart-gabcomp-meses'] = new Chart(document.getElementById('chart-gabcomp-meses'), {
+        type: 'bar',
+        data: {
+          labels: ['Enero','Febrero','Marzo'],
+          datasets: [
+            { label: 'Ctrl. cardiovasc.', data: [56,17,17], backgroundColor: '#ef4444', borderRadius: 4 },
+            { label: 'Ctrl. nutricional', data: [37,12,12], backgroundColor: '#f97316', borderRadius: 4 },
+            { label: 'Lact. seguimiento', data: [9,1,1], backgroundColor: '#8b5cf6', borderRadius: 4 },
+            { label: 'Niño sano 3a6m', data: [9,0,2], backgroundColor: '#0077c8', borderRadius: 4 },
+            { label: 'Resto', data: [15,2,0], backgroundColor: '#94a3b8', borderRadius: 4 }
+          ]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, grid: { display: false } } } }
+      });
+      makeGroupedBar('chart-gabcomp-tipo',
+        ['Ctrl. cardiovasc.','Ctrl. nutricional','Lact. seg.','Niño sano 3a6m','Lact. alerta','EMPA','Cons. lact.','Niño sano 5m'],
+        [
+          { label: 'Enero', data: [56,37,9,9,5,4,3,3], backgroundColor: '#0077c8', borderRadius: 4 },
+          { label: 'Febrero', data: [17,12,1,0,2,0,0,0], backgroundColor: '#7c3aed', borderRadius: 4 },
+          { label: 'Marzo', data: [17,12,1,2,0,0,0,0], backgroundColor: '#16a34a', borderRadius: 4 }
+        ]
+      );
+    }, 100);
+  }
+
+  let chartsGabEneroInit = false;
+  function initChartsGabEnero() {
+    if (chartsGabEneroInit) return; chartsGabEneroInit = true;
+    setTimeout(() => {
+      makeHBar('chart-gab-enero-tipo',
+        ['Ctrl. cardiovasc.','Ctrl. nutricional','Lact. seguimiento','Niño sano 3a6m','EMPA','Lact. alerta','Cons. lactancia','Niño sano 5m'],
+        [56,37,9,9,4,5,3,3], '#0077c8'
+      );
+    }, 100);
+  }
+
+  let chartsGabFebreroInit = false;
+  function initChartsGabFebrero() {
+    if (chartsGabFebreroInit) return; chartsGabFebreroInit = true;
+    setTimeout(() => {
+      makeHBar('chart-gab-febrero-tipo',
+        ['Ctrl. cardiovasc.','Ctrl. nutricional','Lact. alerta','Lact. seguimiento'],
+        [17,12,2,1], '#7c3aed'
+      );
+    }, 100);
+  }
+
+  let chartsEncuestaInit = false;
+  function initChartsEncuesta() {
+    if (chartsEncuestaInit) return; chartsEncuestaInit = true;
+    setTimeout(() => {
+      makeHBar('chart-enc-motivos',
+        ['Trabajo/falta tiempo','Asuntos personales','Problemas salud','Olvido','Prob. CESFAM'],
+        [12,11,6,3,1], '#0077c8'
+      );
+      makeDonut('chart-enc-cancelacion', 13, 20);
+      destroyChart('chart-enc-nocancelar');
+      chartInstances['chart-enc-nocancelar'] = new Chart(document.getElementById('chart-enc-nocancelar'), {
+        type: 'doughnut',
+        data: {
+          labels: ['No sabía cómo cancelar','No recordó cancelar'],
+          datasets: [{ data: [14,6], backgroundColor: ['#ef4444','#f97316'], borderWidth: 0 }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }, cutout: '60%' }
+      });
+      makeGroupedBar('chart-enc-grouped',
+        ['Trabajo','Asuntos pers.','Salud','Olvido','CESFAM'],
+        [
+          { label: 'Sí canceló', data: [3,5,2,2,1], backgroundColor: '#22c55e', borderRadius: 4 },
+          { label: 'No canceló', data: [9,6,4,1,0], backgroundColor: '#ef4444', borderRadius: 4 }
+        ]
+      );
+    }, 100);
+  }
+
+  let chartsComparacionInit = false;
+  function initChartsComparacion() {
+    if (chartsComparacionInit) return; chartsComparacionInit = true;
+    setTimeout(() => {
+      destroyChart('chart-comp-ranking');
+      chartInstances['chart-comp-ranking'] = new Chart(document.getElementById('chart-comp-ranking'), {
+        type: 'bar',
+        data: { labels: ['Gabriela','Constanza','Carolina'], datasets: [{ data: [32,31,16], backgroundColor: ['#7c3aed','#16a34a','#0077c8'], borderRadius: 8 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { display: false } } } }
+      });
+      destroyChart('chart-comp-contacto');
+      chartInstances['chart-comp-contacto'] = new Chart(document.getElementById('chart-comp-contacto'), {
+        type: 'bar',
+        data: { labels: ['Carolina','Constanza','Gabriela'], datasets: [{ data: [81,65,56], backgroundColor: ['#0077c8','#16a34a','#7c3aed'], borderRadius: 8 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, max: 100, grid: { display: false }, ticks: { callback: v => v + '%' } } } }
+      });
+      makeGroupedBar('chart-comp-tipo',
+        ['Ctrl. cardiovasc.','Ctrl. nutricional','Lact. alerta','Niño sano 3a6m','Lact. seg.','EMP','Cons. lact.'],
+        [
+          { label: 'Carolina', data: [3,9,0,2,0,1,1], backgroundColor: '#0077c8', borderRadius: 4 },
+          { label: 'Constanza', data: [12,9,4,2,2,2,0], backgroundColor: '#16a34a', borderRadius: 4 },
+          { label: 'Gabriela', data: [17,12,0,2,1,0,0], backgroundColor: '#7c3aed', borderRadius: 4 }
+        ]
+      );
+    }, 100);
+  }
+</script>
+</body>
+</html>
